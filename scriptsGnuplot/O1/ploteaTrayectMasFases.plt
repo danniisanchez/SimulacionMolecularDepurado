@@ -4,7 +4,7 @@
 
 # Variables del sistema y método
 metodo = "RK2"
-h = "0.001"
+h = "0.01"
 eta = "10"
 
 # Límite de puntos a representar 
@@ -14,10 +14,10 @@ max_lineas = 30000
 t_max = max_lineas * 0.1
 
 # Archivo de datos de entrada
-archivo = sprintf("../../results/O2/%s/datosTrayectoria_%s_%s_%s.txt", metodo, h, eta, metodo)
+archivo = sprintf("../../results/O1/%s/datosTrayectoria_%s_%s_%s.txt", metodo, h, eta, metodo)
 
 # Archivo de salida
-salida = sprintf("../../plots/O2/Trayectorias/TrayectoriasPosicionFases_%s_%s_%s.png", h, eta, metodo)
+salida = sprintf("../../plots/O1/Trayectorias/Trayectorias_%s_%s_%s.png", h, eta, metodo)
 
 # Configuración del terminal 
 set terminal pngcairo size 1400,800 enhanced font "Arial,12"

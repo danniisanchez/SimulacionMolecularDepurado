@@ -3,24 +3,25 @@
 #define M 1.0
 #define K 1.0
 #define A 1.0
-#define KBT 0.2
+#define KBT 1.0
 #define PI (2 * asin(1.0))
 
-#define paso_h 0.001           // paso de integración (0.1, 0.01, 0.001, 0.0001)
-#define termSteps 100000000      //el tiempo que este termalizando sera termsteps * paso
-#define numberSteps 100000000    //el tiempo que este midiendo sera numbersteps * paso
-#define eta 10.0           // fluct 0.1, 1.0, 10.0
-#define flag 1               // 0: Euler, 1: RK2, 2: Verlet
+#define paso_h 0.01           // paso de integración (0.1, 0.01, 0.001, 0.0001)
+#define termSteps 10000000    //el tiempo que este termalizando sera termsteps * paso
+#define numberSteps 10000000  //el tiempo que este midiendo sera numbersteps * paso
+#define eta 10.0               // fluct 0.1, 1.0, 10.0
+#define flag 1                 // 0: Euler, 1: RK2, 2: Verlet
+#define flag_Objetivo 1        // 1: Oscilador Armónico (O1), 2: Doble Pozo (O2)
+#define numDatosGuardar 100000
+#define guardar_cada (numberSteps / numDatosGuardar)  // para 100.000 datos guardar para cada[steps / 100.000]
 
 //*************INCLUDES****************
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
 //**********PARISI RAPUANO*************
-
 #define NormRANu (2.3283063671E-10F)
 
 extern unsigned int irr[256];
@@ -32,18 +33,16 @@ extern void ini_ran(int SEMILLA);
 extern float randomIn(double min, double max);
 
 //**************FUNCIONES********************
-
 extern void paso_euler_maruyama(double *x, double *p);
 extern void paso_rk2_estocastico(double *x, double *p);
 extern void paso_verlet(double *x, double *p);
 extern double random_gaussiano(void);
 extern double energia_cinetica(double p);
 extern double energia_potencial(double x);
-extern void guardaEnergias(FILE *file,double t,double ek,double ep);
-extern void guardaPosiciones(FILE *file,double x);
-extern void guardaVelocidades(FILE *file,double v);
-extern void guardaTrayectoria(FILE *file, double t, double x, double v);
-extern void creaHistoPosiciones(char *nombre_metodo);
-extern void creaHistoVelocidades(char *nombre_metodo);
-extern void guardaAleatorios();
 extern double fuerza(double x);
+extern void guardaAleatorios();
+
+// Nuevas funciones optimizadas con arrays
+extern void guardaEnergiasArray(char *nombre_metodo, double h_val, double eta_val, double *t, double *ek, double *ep, long n);
+extern void guardaTrayectoriaArray(char *nombre_metodo, double h_val, double eta_val, double *t, double *x, double *v, long n);
+extern void creaHistogramasArray(char *nombre_metodo, double h_val, double eta_val, double *x, double *v, long n);

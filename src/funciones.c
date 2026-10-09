@@ -1,11 +1,15 @@
 #include "head.h"
 
-// Nueva función para la fuerza del doble pozo
+// Fuerza dependiendo del objetivo
 double fuerza(double x) {
-    return -4.0 * A * x * (x * x - 1.0);
+    if (flag_Objetivo == 1) {
+        return -K * x; // Fuerza del oscilador armónico (Objetivo 1)
+    } else {
+        return -4.0 * A * x * (x * x - 1.0); // Fuerza del doble pozo (Objetivo 2)
+    }
 }
 
-// Integrador Euler-Maruyama para el oscilador armónico
+// Integrador Euler-Maruyama
 void paso_euler_maruyama(double *x, double *p){
     double f_p, g_xp, zeta, Z, x_actual, p_actual;
     
@@ -27,7 +31,7 @@ void paso_euler_maruyama(double *x, double *p){
 
 //RK estocástico 2º orden
 void paso_rk2_estocastico(double *x, double *p){
-double x_n, p_n, zeta, Z, f_x1, g_p1, f_x2, g_p2;
+    double x_n, p_n, zeta, Z, f_x1, g_p1, f_x2, g_p2;
     // Estado inicial 
     x_n = *x;
     p_n = *p;
@@ -44,7 +48,6 @@ double x_n, p_n, zeta, Z, f_x1, g_p1, f_x2, g_p2;
     f_x2 = (p_n + paso_h * g_p1) / M;
     g_p2 = -eta * (p_n + paso_h * g_p1) + fuerza(x_n + paso_h * f_x1);
     
-
     // Actualización promediando ambas evaluaciones
     *x = x_n + 0.5 * paso_h * (f_x1 + f_x2);
     *p = p_n + 0.5 * paso_h * (g_p1 + g_p2) + Z;
@@ -87,13 +90,10 @@ void paso_verlet(double *x, double *p){
 
 double random_gaussiano(void){        
     double x1, x2;
-
     do{
         x1 = randomIn(0, 1);
     } while (x1 == 0);
-
     x2 = randomIn(0, 1);
-
     return -sqrt(-2.0 * log(x1)) * cos(2.0*PI*x2);
 }
 
@@ -101,159 +101,106 @@ double energia_cinetica(double p){
     return (p * p) / (2.0 * M); 
 }
 
+// Energía potencial dependiendo del objetivo
 double energia_potencial(double x){
-    // Potencial del doble pozo: V(x) = A*(x^2 - 1)^2
-    return A * (x * x - 1.0) * (x * x - 1.0); 
+    if (flag_Objetivo == 1) {
+        return 0.5 * K * x * x; // Potencial armónico (Objetivo 1)
+    } else {
+        return A * (x * x - 1.0) * (x * x - 1.0); // Potencial de doble pozo (Objetivo 2)
+    }
 }
 
-void guardaEnergias(FILE *file,double t,double ek,double ep){
-    fprintf(file,"%.8g %.8g %.8g %.8g\n",t,ek,ep,ek + ep);
+void guardaAleatorios() {
+    char ruta[250];
+    sprintf(ruta, "results/O%d/datos_aleatorios.txt", flag_Objetivo);
+    FILE *file = fopen(ruta, "w");
+    if (file != NULL) {
+        for(int i = 0; i < 50000; i++) {
+            fprintf(file, "%f %f\n", Random(), Random());
+        }
+        fclose(file);
+        printf("Archivo de prueba de aleatoriedad generado con exito en O%d.\n", flag_Objetivo);
+    } else {
+        printf("Error: No se pudo crear %s\n", ruta);
+    }
 }
 
-void guardaPosiciones(FILE *file,double x) {
-    fprintf(file,"%.8g\n",x);
+void guardaEnergiasArray(char *nombre_metodo, double h_val, double eta_val, double *t, double *ek, double *ep, long n) {
+    char nombre_out[250];
+    sprintf(nombre_out, "results/O%d/%s/datosEnergia_%g_%g_%s.txt", flag_Objetivo, nombre_metodo, h_val, eta_val, nombre_metodo);
+    FILE *f = fopen(nombre_out, "w");
+    if (f != NULL) {
+        setvbuf(f, NULL, _IOFBF, 1024 * 1024); // Buffer grande para escritura rápida
+        for (long i = 0; i < n; i++) {
+            fprintf(f, "%.8g %.8g %.8g %.8g\n", t[i], ek[i], ep[i], ek[i] + ep[i]);
+        }
+        fclose(f);
+    } else {
+        printf("Error: No se pudo escribir %s\n", nombre_out);
+    }
 }
 
-void guardaVelocidades(FILE *file,double v) {
-    fprintf(file,"%.8g\n",v);
+void guardaTrayectoriaArray(char *nombre_metodo, double h_val, double eta_val, double *t, double *x, double *v, long n) {
+    char nombre_out[250];
+    sprintf(nombre_out, "results/O%d/%s/datosTrayectoria_%g_%g_%s.txt", flag_Objetivo, nombre_metodo, h_val, eta_val, nombre_metodo);
+    FILE *f = fopen(nombre_out, "w");
+    if (f != NULL) {
+        setvbuf(f, NULL, _IOFBF, 1024 * 1024);
+        for (long i = 0; i < n; i++) {
+            fprintf(f, "%.8g %.8g %.8g\n", t[i], x[i], v[i]);
+        }
+        fclose(f);
+    } else {
+        printf("Error: No se pudo escribir %s\n", nombre_out);
+    }
 }
 
-void guardaTrayectoria(FILE *file, double t, double x, double v)
-{
-    fprintf(file, "%.8g %.8g %.8g\n", t, x, v);
-}
+void creaHistogramasArray(char *nombre_metodo, double h_val, double eta_val, double *x, double *v, long n) {
+    if (n == 0) return;
 
-void creaHistoPosiciones(char *nombre_metodo){
-    char nombre_in[150];
-    char nombre_out[150];
-    
-    sprintf(nombre_in, "results/O2/%s/datosPosiciones_%g_%g_%s.txt", nombre_metodo, paso_h, eta, nombre_metodo);
-    sprintf(nombre_out, "results/O2/%s/HistogramaPosiciones_%g_%g_%s.txt", nombre_metodo, paso_h, eta, nombre_metodo);
+    double x_min = x[0], x_max = x[0];
+    double v_min = v[0], v_max = v[0];
 
-    FILE *f_in = fopen(nombre_in, "r");
-    if (f_in == NULL) {
-        printf("Error: No se pudo abrir %s para leer.\n", nombre_in);
-        return;
+    for (long i = 1; i < n; i++) {
+        if (x[i] < x_min) x_min = x[i];
+        if (x[i] > x_max) x_max = x[i];
+        if (v[i] < v_min) v_min = v[i];
+        if (v[i] > v_max) v_max = v[i];
     }
 
-    double x_val;
-    double x_min = 0.0, x_max = 0.0;
-    int num_datos = 0;
-
-    while (fscanf(f_in, "%lf", &x_val) == 1) { //si devuelve 1 es que lee un numro
-        if (x_val < x_min) x_min = x_val;
-        if (x_val > x_max) x_max = x_val;
-        num_datos++;
-    }
-
-    if (num_datos == 0) {
-        fclose(f_in);
-        return; 
-    }
-
-    // --- CONFIGURACIÓN DE INTERVALOS ---
     int cajas = 100;
     double dx = (x_max - x_min) / cajas;
-    
-    int hist[100] = {0}; // Inicializado a 0
+    double dv = (v_max - v_min) / cajas;
 
-    // --- SEGUNDA PASADA: Rebobinar y rellenar frecuencias ---
-    fclose(f_in);
-    f_in = fopen(nombre_in, "r");
+    int hist_x[100] = {0};
+    int hist_v[100] = {0};
 
-    while (fscanf(f_in, "%lf", &x_val) == 1) {
-        int cajai = (int)((x_val - x_min) / dx); 
-        if (cajai == cajas) cajai--;               
-        if (cajai >= 0 && cajai < cajas) {
-            hist[cajai]++;
-        }                          
+    for (long i = 0; i < n; i++) {
+        int cajai_x = (int)((x[i] - x_min) / dx);
+        if (cajai_x == cajas) cajai_x--;
+        if (cajai_x >= 0 && cajai_x < cajas) hist_x[cajai_x]++;
+
+        int cajai_v = (int)((v[i] - v_min) / dv);
+        if (cajai_v == cajas) cajai_v--;
+        if (cajai_v >= 0 && cajai_v < cajas) hist_v[cajai_v]++;
     }
-    fclose(f_in);
 
-    // --- GUARDAR EL TXT DEL HISTOGRAMA ---
+    char nombre_out[250];
+    sprintf(nombre_out, "results/O%d/%s/Histogramas_%g_%g_%s.txt", flag_Objetivo, nombre_metodo, h_val, eta_val, nombre_metodo);
+
     FILE *f_out = fopen(nombre_out, "w");
     if (f_out != NULL) {
         for (int i = 0; i < cajas; i++) {
             double x_centro = x_min + i * dx + (dx / 2.0);
-            double probabilidad = (double)hist[i] / (num_datos * dx); // Normalización
-            fprintf(f_out, "%f %f\n", x_centro, probabilidad);
-        }
-        fclose(f_out);
-    }
-}
+            double prob_x = (double)hist_x[i] / (n * dx);
 
-void creaHistoVelocidades(char *nombre_metodo){
-    char nombre_in[150];
-    char nombre_out[150];
-    
-    sprintf(nombre_in, "results/O2/%s/datosVelocidades_%g_%g_%s.txt", nombre_metodo, paso_h, eta, nombre_metodo);
-    sprintf(nombre_out, "results/O2/%s/HistogramaVelocidades_%g_%g_%s.txt", nombre_metodo, paso_h, eta, nombre_metodo);
-
-    FILE *f_in = fopen(nombre_in, "r");
-    if (f_in == NULL) {
-        printf("Error: No se pudo abrir %s para leer.\n", nombre_in);
-        return;
-    }
-
-    double v_val;
-    double v_min = 0.0, v_max = 0.0;
-    int num_datos = 0;
-
-    while (fscanf(f_in, "%lf", &v_val) == 1) { //si devuelve 1 es que lee un numro
-        if (v_val < v_min) v_min = v_val;
-        if (v_val > v_max) v_max = v_val;
-        num_datos++;
-    }
-
-    if (num_datos == 0) {
-        fclose(f_in);
-        return; 
-    }
-
-    // --- CONFIGURACIÓN DE INTERVALOS ---
-    int cajas = 100;
-    double dv = (v_max - v_min) / cajas;
-    
-    int hist[100] = {0}; // Inicializado a 0
-
-    // --- SEGUNDA PASADA: Rebobinar y rellenar frecuencias ---
-    fclose(f_in);
-    f_in = fopen(nombre_in, "r");
-
-    while (fscanf(f_in, "%lf", &v_val) == 1) {
-        int cajai = (int)((v_val - v_min) / dv); 
-        if (cajai == cajas) cajai--;               
-        if (cajai >= 0 && cajai < cajas) {
-            hist[cajai]++;
-        }                          
-    }
-    fclose(f_in);
-
-    // --- GUARDAR EL TXT DEL HISTOGRAMA ---
-    FILE *f_out = fopen(nombre_out, "w");
-    if (f_out != NULL) {
-        for (int i = 0; i < cajas; i++) {
             double v_centro = v_min + i * dv + (dv / 2.0);
-            double probabilidad = (double)hist[i] / (num_datos * dv); // Normalización
-            fprintf(f_out, "%f %f\n", v_centro, probabilidad);
+            double prob_v = (double)hist_v[i] / (n * dv);
+
+            fprintf(f_out, "%f %f %f %f\n", x_centro, prob_x, v_centro, prob_v);
         }
         fclose(f_out);
-    }
-}
-
-
-
-void guardaAleatorios() {
-    // Asegúrate de que la carpeta results existe
-    FILE *file = fopen("results/O2/datos_aleatorios.txt", "w");
-    if (file != NULL) {
-        for(int i = 0; i < 50000; i++) {
-            // Guardamos coordenadas (x, y) generando dos números seguidos
-            fprintf(file, "%f %f\n", Random(), Random());
-        }
-        fclose(file);
-        printf("Archivo de prueba de aleatoriedad generado con exito.\n");
     } else {
-        printf("Error: No se pudo crear datos_aleatorios.txt\n");
+        printf("Error: No se pudo escribir %s\n", nombre_out);
     }
 }
