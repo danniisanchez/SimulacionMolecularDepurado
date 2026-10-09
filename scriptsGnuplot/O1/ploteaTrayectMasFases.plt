@@ -4,11 +4,11 @@
 
 # Variables del sistema y método
 metodo = "RK2"
-h = "0.01"
+h = "0.001"
 eta = "10"
 
 # Límite de puntos a representar 
-max_lineas = 30000
+max_lineas = 3000
 
 # Tiempo máximo para ajustar el eje X (cada línea guardada avanza 0.1)
 t_max = max_lineas * 0.1

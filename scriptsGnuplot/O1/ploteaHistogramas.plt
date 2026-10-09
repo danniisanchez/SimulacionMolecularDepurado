@@ -1,5 +1,5 @@
 # Definición de variables
-h = "0.01"
+h = "0.001"
 eta = "10"
 metodo = "RK2"
 
@@ -17,7 +17,7 @@ set multiplot layout 1,2 title sprintf("Distribuciones - %s (h=%s, {/Symbol h}=%
 # --- Constantes del sistema ---
 K = 1.0
 M = 1.0
-KBT = 0.2  
+KBT = 1.0  
 
 # ==========================================
 # PLOT 1: POSICIONES (Izquierda)

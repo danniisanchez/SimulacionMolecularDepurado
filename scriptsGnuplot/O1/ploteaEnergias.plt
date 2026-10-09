@@ -1,5 +1,5 @@
 # Definición de variables
-h = "0.01"
+h = "0.001"
 eta = "10"
 metodo = "RK2"
 
