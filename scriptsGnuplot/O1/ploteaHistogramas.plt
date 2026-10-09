@@ -1,0 +1,67 @@
+# ploteaConjunto.plt
+# Definición de variables
+h = "0.0001"
+eta = "1"
+metodo = "Verlet"
+
+# Rutas de entrada
+input_file_pos = sprintf("../../results/O1/%s/HistogramaPosiciones_%s_%s_%s.txt", metodo, h, eta, metodo)
+input_file_vel = sprintf("../../results/O1/%s/HistogramaVelocidades_%s_%s_%s.txt", metodo, h, eta, metodo)
+
+# Ruta de salida
+output_file = sprintf("../plots/%s/Histogramas_%s_%s_%s.png", metodo, h, eta, metodo)
+
+# Configuración del terminal (lienzo más ancho para que quepan bien dos plots)
+set terminal pngcairo size 1200,600 enhanced font 'Arial,12'
+set output output_file
+
+# Activar multiplot con 1 fila y 2 columnas
+set multiplot layout 1,2 title sprintf("Distribuciones de Posición y Velocidad - %s (h=%s, {/Symbol h}=%s)", metodo, h, eta) font ",14"
+
+# --- Constantes del sistema ---
+K = 1.0
+M = 1.0
+KBT = 1.0
+
+# ==========================================
+# PLOT 1: POSICIONES (Izquierda)
+# ==========================================
+set title "Distribución de Posiciones"
+set xlabel "Posición (x)"
+set ylabel "P(x)"
+set grid
+set style fill solid 0.5 border -1
+
+# Distribución teórica de Boltzmann P(x)
+P_teorica_x(x) = sqrt(K / (2.0 * pi * KBT)) * exp(-(0.5 * K * x**2) / KBT)
+
+# Calcular ancho de bin para posiciones
+stats input_file_pos using 1 nooutput
+bin_pos = (STATS_max - STATS_min) / (STATS_records - 1)
+
+# Dibujar el histograma de posiciones
+plot input_file_pos using 1:2:(bin_pos) title "Simulación" with boxes linecolor rgb "blue", \
+     P_teorica_x(x) title "Teorica" with lines linewidth 2 linecolor rgb "black"
+
+
+# ==========================================
+# PLOT 2: VELOCIDADES (Derecha)
+# ==========================================
+set title "Distribución de Velocidades"
+set xlabel "Velocidad (v)"
+set ylabel "P(v)"
+# Mantener el grid y el estilo
+
+# Distribución teórica de Boltzmann P(v)
+P_teorica_v(x) = sqrt(M / (2.0 * pi * KBT)) * exp(-(0.5 * M * x**2) / KBT)
+
+# Calcular ancho de bin para velocidades
+stats input_file_vel using 1 nooutput
+bin_vel = (STATS_max - STATS_min) / (STATS_records - 1)
+
+# Dibujar el histograma de velocidades
+plot input_file_vel using 1:2:(bin_vel) title "Simulación" with boxes linecolor rgb "red", \
+     P_teorica_v(x) title "Teorica" with lines linewidth 2 linecolor rgb "black"
+
+# Desactivar multiplot
+unset multiplot
