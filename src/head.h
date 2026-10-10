@@ -3,15 +3,15 @@
 #define M 1.0
 #define K 1.0
 #define A 1.0
-#define KBT 1.0
+#define KBT 0.2
 #define PI (2 * asin(1.0))
 
 #define paso_h 0.001           // paso de integración (0.1, 0.01, 0.001, 0.0001)
 #define termSteps 100000000    //el tiempo que este termalizando sera termsteps * paso
 #define numberSteps 100000000  //el tiempo que este midiendo sera numbersteps * paso
-#define eta 10.0               // fluct 0.1, 1.0, 10.0
-#define flag 1                 // 0: Euler, 1: RK2, 2: Verlet
-#define flag_Objetivo 1        // 1: Oscilador Armónico (O1), 2: Doble Pozo (O2)
+#define eta 0.1                // fluct 0.1, 1.0, 10.0
+#define flag 2                 // 0: Euler, 1: RK2, 2: Verlet
+#define flag_Objetivo 2        // 1: Oscilador Armónico (O1), 2: Doble Pozo (O2)
 #define numDatosGuardar 100000
 #define guardar_cada (numberSteps / numDatosGuardar)  // para 100.000 datos guardar para cada[steps / 100.000]
 
