@@ -1,11 +1,12 @@
 # Definición de variables
 h = "0.001"
-eta = "10"
+eta = "5"
+A = 1.2
 metodo = "Verlet"
 
 # Rutas de entrada y salida
 input_file = sprintf("../../results/O2/%s/Histogramas_%s_%s_%s.txt", metodo, h, eta, metodo)
-output_file = sprintf("../../plots/O2/%s/Histogramas_%s_%s_%s.png", metodo, h, eta, metodo)
+output_file = sprintf("../../plots/O2/%s/Histogramas_%s_eta%s_A%g_%s.png", metodo, h, eta, A, metodo)
 
 # Configuración del terminal 
 set terminal pngcairo size 1200,600 enhanced font 'Arial,12'
@@ -15,7 +16,6 @@ set output output_file
 set multiplot layout 1,2 title sprintf("Distribuciones (Doble Pozo) - %s (h=%s, {/Symbol h}=%s)", metodo, h, eta) font ",14"
 
 # --- Constantes del sistema (Objetivo 2) ---
-A = 1.0
 M = 1.0
 KBT = 0.2  
 pi = 3.14159265359
@@ -32,7 +32,7 @@ set xrange [-2:2]
 
 # Distribución teórica de Boltzmann P(x) para el doble pozo
 # C es la constante de normalización aproximada para A=1.0 y KBT=0.2
-C = 1.26 
+C = 1.45 
 P_teorica_x(x) = C * exp(-(A * (x**2 - 1.0)**2) / KBT)
 
 # Ancho de bin usando la columna 1 (x_centro)

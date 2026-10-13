@@ -1,11 +1,14 @@
 # Definición de variables
 h = "0.001"
-eta = "0.1"
+eta = "5"
+A = 1.2
 metodo = "Verlet"
 
-# Rutas de entrada y salida
+# Archivo de entrada (el que genera el C)
 input_file = sprintf("../../results/O2/%s/datosEnergia_%s_%s_%s.txt", metodo, h, eta, metodo)
-output_file = sprintf("../../plots/O2/%s/Energias_%s_%s_%s.png", metodo, h, eta, metodo)
+
+# Salida con la A incluida
+output_file = sprintf("../../plots/O2/%s/Energias_h%s_eta%s_A%g_%s.png", metodo, h, eta, A, metodo)
 
 # Configuración del terminal 
 set terminal pngcairo size 900,600 enhanced font 'Arial,12'

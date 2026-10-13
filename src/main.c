@@ -76,16 +76,33 @@ int main(void) {
     /************************************************/
     /************** 2. FASE DE MEDIDA ***************/
     /************************************************/
-    printf("Iniciando fase de medida...\n");
+printf("Iniciando fase de medida...\n");
+
+    long pasos_derecha = 0;
+    long pasos_estancia = 0;
+    int estado_actual = (x > 0.0) ? 1 : -1;
+    FILE *f_tiempos = fopen("../../results/O2/tiempos_estancia.txt", "w");
 
     for (long i = 0; i < numberSteps; i++) {
         
-        /******** Integración ********/
         switch(flag) {
             case 0: paso_euler_maruyama(&x, &p); break;
             case 1: paso_rk2_estocastico(&x, &p); break;
             case 2: paso_verlet(&x, &p); break;
         }
+
+        // --- CÁLCULO DE OCUPACIÓN Y TIEMPOS ---
+        if (x > 0.0) pasos_derecha++;
+
+        int nuevo_estado = (x > 0.0) ? 1 : -1;
+        pasos_estancia++;
+
+        if (nuevo_estado != estado_actual) {
+            fprintf(f_tiempos, "%g\n", pasos_estancia * paso_h);
+            pasos_estancia = 0;
+            estado_actual = nuevo_estado;
+        }
+        // --------------------------------------
 
         if (((i + 1) % guardar_cada == 0) || (i == numberSteps - 1)) {
             t_medida[idx_medida] = (double)(i + 1) * paso_h;
@@ -94,6 +111,10 @@ int main(void) {
             idx_medida++;
         }
     }
+    
+    fclose(f_tiempos);
+    printf("Ocupacion x > 0: %.2f%%\n", 100.0 * pasos_derecha / numberSteps);
+    printf("Ocupacion x < 0: %.2f%%\n", 100.0 * (numberSteps - pasos_derecha) / numberSteps);
 
     /************************************************/
     /************** CREAR FICHEROS *****************/

@@ -5,7 +5,8 @@
 # Variables del sistema y método
 metodo = "Verlet"
 h = "0.001"
-eta = "0.1"
+eta = "5"
+A = 1.2
 
 # Límite de puntos a representar 
 max_lineas = 30000
@@ -17,7 +18,7 @@ t_max = max_lineas * 0.1
 archivo = sprintf("../../results/O2/%s/datosTrayectoria_%s_%s_%s.txt", metodo, h, eta, metodo)
 
 # Archivo de salida
-salida = sprintf("../../plots/O2/Trayectorias/Trayectorias_%s_%s_%s.png", h, eta, metodo)
+salida = sprintf("../../plots/O2/Trayectorias/Trayectorias_h%s_eta%s_A%g_%s.png", h, eta, A, metodo)
 
 # Configuración del terminal 
 set terminal pngcairo size 1400,800 enhanced font "Arial,12"
