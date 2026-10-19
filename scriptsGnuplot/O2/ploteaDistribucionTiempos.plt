@@ -1,21 +1,59 @@
-set terminal pngcairo size 800,600 enhanced font 'Arial,14'
-set output sprintf("../../plots/O2/Verlet/Distribucion_Tiempos_A%g_eta%s.png", A, eta)
+# ==============================
+# DISTRIBUCION TIEMPOS ESTANCIA
+# ==============================
 
-# Define aqui los parametros que vas a plotear
 A = 0.5
-eta = "0.01"
+eta = 0.01
 
-set title sprintf("Distribucion de Tiempos de Estancia (A=%g, eta=%s)", A, eta)
-set xlabel "Tiempo de estancia (t)"
-set ylabel "Frecuencia (Escala Logaritmica)"
+set terminal pngcairo size 800,600 enhanced font "Arial,14"
+
+set output sprintf( \
+    "../../plots/O2/Verlet/Distribucion_Tiempos_A%g_eta%g.png", \
+    A, eta \
+)
+
+set title sprintf( \
+    "Distribucion de tiempos de estancia (A=%g, eta=%g)", \
+    A, eta \
+)
+
+set xlabel "Tiempo de estancia"
+set ylabel "Frecuencia"
+
 set logscale y
 set grid
 
-# Configuracion del histograma
 binwidth = 2.0
-bin(x,width) = width*floor(x/width) + width/2.0
+
+bin(x,width) = \
+    width * floor(x/width) + width/2.0
+
 set style fill transparent solid 0.5 border -1
 
 
-plot sprintf("../../results/O2/Verlet/tiempos_derecha_A%g_eta%s.txt", A, eta) using (bin($1,binwidth)):(1.0) smooth freq with boxes lc rgb "blue" title "Estado x > 0 (Derecha)", \
-     sprintf("../../results/O2/Verlet/tiempos_izquierda_A%g_eta%s.txt", A, eta) using (bin($1,binwidth)):(1.0) smooth freq with boxes lc rgb "red" title "Estado x < 0 (Izquierda)"
+archivo_der = sprintf( \
+    "../../results/O2/Verlet/tiempos_derecha_A%g_eta%g.txt", \
+    A, eta \
+)
+
+archivo_izq = sprintf( \
+    "../../results/O2/Verlet/tiempos_izquierda_A%g_eta%g.txt", \
+    A, eta \
+)
+
+
+plot \
+    archivo_der \
+    using (bin($1,binwidth)):(1.0) \
+    smooth freq \
+    with boxes \
+    title "Pozo derecho", \
+\
+    archivo_izq \
+    using (bin($1,binwidth)):(1.0) \
+    smooth freq \
+    with boxes \
+    title "Pozo izquierdo"
+
+
+unset output
