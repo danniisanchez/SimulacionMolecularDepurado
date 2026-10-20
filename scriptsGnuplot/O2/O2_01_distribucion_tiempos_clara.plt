@@ -3,8 +3,8 @@
 
 metodo = "Verlet"
 h = 0.001
-A = 1.0
-eta = 3.0
+A = 2.0
+eta = 1.0
 XC = 0.2
 
 f_der = sprintf("../../results/O2/%s/tiempos_derecha_h%g_A%g_eta%g_XC%g.txt",metodo,h,A,eta,XC)
