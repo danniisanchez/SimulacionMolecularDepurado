@@ -2,7 +2,7 @@
 # DISTRIBUCION TIEMPOS ESTANCIA
 # ==============================
 
-A = 0.5
+A = 1
 eta = 0.01
 
 set terminal pngcairo size 800,600 enhanced font "Arial,14"

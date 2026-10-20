@@ -1,0 +1,2 @@
+# h A eta XC P_izq P_der transiciones estancias_izq estancias_der tau_izq tau_der tau_global k_sim
+0.001 1 0.5 0.2 0.53038901 0.46961099 268 134 133 395.852686567 346.644721805 371.340853933 0.00269294366459

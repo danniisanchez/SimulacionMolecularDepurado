@@ -30,8 +30,8 @@
 metodo = "Verlet"
 
 h   = 0.001
-A   = 1.2
-eta = 5.0
+A   = 1.0
+eta = 2.0
 XC  = 0.2
 
 
