@@ -14,7 +14,7 @@
 #define numberSteps 100000000  //el tiempo que este midiendo sera numbersteps * paso
 #define eta 1.0                // fijo durante el barrido de fuerza
 #define flag 2                 // 0: Euler, 1: RK2, 2: Verlet
-#define flag_Objetivo 2        // 1: Oscilador ArmÃ³nico (O1), 2: Doble Pozo (O2)
+#define flag_Objetivo 2        // 1: Oscilador Armonico (O1), 2: Doble Pozo (O2)
 #define numDatosGuardar 100000
 #define guardar_cada (numberSteps / numDatosGuardar)  // para 100.000 datos guardar para cada[steps / 100.000]
 

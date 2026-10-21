@@ -1,0 +1,36 @@
+
+
+*******************************************************************************
+Thu Oct 22 01:14:15 2026
+
+
+FIT:    data read from archivo using (log($1-1)):(log(sqrt($9)))
+        format = x:z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x) = logC + nu*x
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   logC          nu           
+   0 3.6185620446e-02   0.00e+00  1.20e+00   -8.958797e-01   5.000000e-01
+   4 2.0281894902e-03  -1.32e-04  1.20e-04   -6.746873e-01   4.300902e-01
+
+After 4 iterations the fit converged.
+final sum of squares of residuals : 0.00202819
+rel. change during last iteration : -1.32281e-09
+
+degrees of freedom    (FIT_NDF)                        : 3
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.0260012
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.000676063
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+logC            = -0.674687        +/- 0.03116      (4.619%)
+nu              = 0.43009          +/- 0.01084      (2.521%)
+
+correlation matrix of the fit parameters:
+                logC   nu     
+logC            1.000 
+nu             -0.928  1.000 
