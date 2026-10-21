@@ -5,7 +5,7 @@ double fuerza(double x) {
     if (flag_Objetivo == 1) {
         return -K * x; /* Oscilador armónico */
     } else {
-        return -4.0 * A * x * (x * x - 1.0); /* Doble pozo */
+        return -4.0 * A * x * (x * x - 1.0) + FEXT; /* Doble pozo inclinado */
     }
 }
 
@@ -87,7 +87,7 @@ double energia_potencial(double x) {
         return 0.5 * K * x * x;
     } else {
         double aux = x * x - 1.0;
-        return A * aux * aux;
+        return A * aux * aux - FEXT * x;
     }
 }
 
@@ -115,8 +115,8 @@ void guardaEnergiasArray(char *nombre_metodo, double h_val, double eta_val,
     if (flag_Objetivo == 2) {
         /* Añadimos A para no sobrescribir barridos de altura de barrera. */
         sprintf(nombre_out,
-                "results/O%d/%s/datosEnergia_h%g_A%g_eta%g_%s.txt",
-                flag_Objetivo, nombre_metodo, h_val, A, eta_val, nombre_metodo);
+                "results/O%d/%s/datosEnergia_h%g_A%g_eta%g_F%g_%s.txt",
+                flag_Objetivo, nombre_metodo, h_val, A, eta_val, FEXT, nombre_metodo);
     } else {
         sprintf(nombre_out,
                 "results/O%d/%s/datosEnergia_%g_%g_%s.txt",
@@ -142,8 +142,8 @@ void guardaTrayectoriaArray(char *nombre_metodo, double h_val, double eta_val,
 
     if (flag_Objetivo == 2) {
         sprintf(nombre_out,
-                "results/O%d/%s/datosTrayectoria_h%g_A%g_eta%g_%s.txt",
-                flag_Objetivo, nombre_metodo, h_val, A, eta_val, nombre_metodo);
+                "results/O%d/%s/datosTrayectoria_h%g_A%g_eta%g_F%g_%s.txt",
+                flag_Objetivo, nombre_metodo, h_val, A, eta_val, FEXT, nombre_metodo);
     } else {
         sprintf(nombre_out,
                 "results/O%d/%s/datosTrayectoria_%g_%g_%s.txt",
@@ -203,8 +203,8 @@ void creaHistogramasArray(char *nombre_metodo, double h_val, double eta_val,
 
     if (flag_Objetivo == 2) {
         sprintf(nombre_out,
-                "results/O%d/%s/Histogramas_h%g_A%g_eta%g_%s.txt",
-                flag_Objetivo, nombre_metodo, h_val, A, eta_val, nombre_metodo);
+                "results/O%d/%s/Histogramas_h%g_A%g_eta%g_F%g_%s.txt",
+                flag_Objetivo, nombre_metodo, h_val, A, eta_val, FEXT, nombre_metodo);
     } else {
         sprintf(nombre_out,
                 "results/O%d/%s/Histogramas_%g_%g_%s.txt",

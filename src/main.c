@@ -50,11 +50,19 @@ int main(void) {
             return 1;
     }
 
+    if (flag_Objetivo == 2) {
+        double Fcrit = 8.0 * A / (3.0 * sqrt(3.0));
+        if (fabs(FEXT) >= Fcrit) {
+            printf("AVISO: |FEXT|=%g >= Fcrit=%g; el potencial ya no tiene dos pozos metastables.\n",
+                   fabs(FEXT), Fcrit);
+        }
+    }
+
     /************************************************/
     /************** 1. TERMALIZACIÓN ****************/
     /************************************************/
-    printf("Termalizando: metodo=%s  h=%g  eta=%g  A=%g  Objetivo=O%d\n",
-           nombre_metodo, paso_h, eta, A, flag_Objetivo);
+    printf("Termalizando: metodo=%s  h=%g  eta=%g  A=%g  FEXT=%g  Objetivo=O%d\n",
+           nombre_metodo, paso_h, eta, A, FEXT, flag_Objetivo);
 
     for (long i = 0; i < termSteps; i++) {
         switch(flag) {
@@ -100,16 +108,16 @@ int main(void) {
     char nombre_der[300], nombre_izq[300], nombre_resumen[300];
 
     sprintf(nombre_der,
-            "results/O%d/%s/tiempos_derecha_h%g_A%g_eta%g_XC%g.txt",
-            flag_Objetivo, nombre_metodo, paso_h, A, eta, xc);
+            "results/O%d/%s/tiempos_derecha_h%g_A%g_eta%g_F%g_XC%g.txt",
+            flag_Objetivo, nombre_metodo, paso_h, A, eta, FEXT, xc);
 
     sprintf(nombre_izq,
-            "results/O%d/%s/tiempos_izquierda_h%g_A%g_eta%g_XC%g.txt",
-            flag_Objetivo, nombre_metodo, paso_h, A, eta, xc);
+            "results/O%d/%s/tiempos_izquierda_h%g_A%g_eta%g_F%g_XC%g.txt",
+            flag_Objetivo, nombre_metodo, paso_h, A, eta, FEXT, xc);
 
     sprintf(nombre_resumen,
-            "results/O%d/%s/resumen_h%g_A%g_eta%g_XC%g.txt",
-            flag_Objetivo, nombre_metodo, paso_h, A, eta, xc);
+            "results/O%d/%s/resumen_h%g_A%g_eta%g_F%g_XC%g.txt",
+            flag_Objetivo, nombre_metodo, paso_h, A, eta, FEXT, xc);
 
     FILE *f_tiempos_der = fopen(nombre_der, "w");
     FILE *f_tiempos_izq = fopen(nombre_izq, "w");
@@ -234,12 +242,12 @@ int main(void) {
 
     if (f_resumen) {
         fprintf(f_resumen,
-                "# h A eta XC P_izq P_der transiciones estancias_izq estancias_der tau_izq tau_der tau_global k_sim\n");
+                "# h A eta XC P_izq P_der transiciones estancias_izq estancias_der tau_izq tau_der tau_global k_sim FEXT\n");
         fprintf(f_resumen,
-                "%.12g %.12g %.12g %.12g %.12g %.12g %ld %ld %ld %.12g %.12g %.12g %.12g\n",
+                "%.12g %.12g %.12g %.12g %.12g %.12g %ld %ld %ld %.12g %.12g %.12g %.12g %.12g\n",
                 paso_h, A, eta, xc, ocupacion_izquierda, ocupacion_derecha,
                 transiciones_confirmadas, estancias_izq, estancias_der,
-                tau_izq, tau_der, tau_global, k_sim);
+                tau_izq, tau_der, tau_global, k_sim, FEXT);
         fclose(f_resumen);
     } else {
         printf("AVISO: No se pudo crear %s\n", nombre_resumen);
@@ -267,6 +275,7 @@ int main(void) {
     printf("h                   : %g\n", paso_h);
     printf("A                   : %g\n", A);
     printf("eta                 : %g\n", eta);
+    printf("FEXT                : %g\n", FEXT);
     printf("XC analisis         : %g\n", xc);
     printf("Pasos termalizacion : %ld\n", (long)termSteps);
     printf("Pasos medida        : %ld\n", (long)numberSteps);
