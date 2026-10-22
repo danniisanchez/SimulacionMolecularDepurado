@@ -87,6 +87,19 @@ int main(void) {
 
     printf("Termalizacion terminada.\n");
 
+    // Cálculo numérico de la constante de normalización teórica
+    double dx = 0.0001;
+    double Z = 0.0;
+    
+    // Integramos desde -3 hasta 3 (más allá la probabilidad es prácticamente 0)
+    for (double x_int = -3.0; x_int <= 3.0; x_int += dx) {
+        double V_x = A * pow((x_int * x_int - 1.0), 2);
+        Z += exp(-V_x / KBT) * dx;
+    }
+    
+    double C_teorica = 1.0 / Z;
+    printf("Para A = %g, la constante de normalizacion teorica es C = %g\n", A, C_teorica);
+
     /************************************************/
     /************** 2. FASE DE MEDIDA ***************/
     /************************************************/
