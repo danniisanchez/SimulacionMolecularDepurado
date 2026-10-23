@@ -12,10 +12,13 @@ void paso_verlet_gjf(Bead *beads, int N, Vec3 *f_old, Vec3 *f_new, Vec3 *beta) {
     const double a = (1.0 - alpha*H/(2.0*M))/denom;
     const double b = 1.0/denom;
     const double sigma = sqrt(2.0*alpha*KBT*H);
-
+    beta[0].x = 0.0;
+    beta[0].y = 0.0;
+    beta[0].z = 0.0;
+    
     calcula_fuerzas(beads,f_old,N);
 
-    for (int i=0; i<N; i++) {
+    for (int i=1; i<N; i++) {
         beta[i].x = sigma*random_gaussiano();
         beta[i].y = sigma*random_gaussiano();
         beta[i].z = sigma*random_gaussiano();
@@ -27,7 +30,7 @@ void paso_verlet_gjf(Bead *beads, int N, Vec3 *f_old, Vec3 *f_new, Vec3 *beta) {
 
     calcula_fuerzas(beads,f_new,N);
 
-    for (int i=0; i<N; i++) {
+    for (int i=1; i<N; i++) {
         beads[i].v.x = a*beads[i].v.x + H*(a*f_old[i].x+f_new[i].x)/(2.0*M) + b*beta[i].x/M;
         beads[i].v.y = a*beads[i].v.y + H*(a*f_old[i].y+f_new[i].y)/(2.0*M) + b*beta[i].y/M;
         beads[i].v.z = a*beads[i].v.z + H*(a*f_old[i].z+f_new[i].z)/(2.0*M) + b*beta[i].z/M;
@@ -55,7 +58,7 @@ void inicializa_cadena(Bead *beads, int N) {
 
 void calcula_fuerzas(const Bead *beads, Vec3 *f, int N) {
     for (int i=0; i<N; i++) f[i].x=f[i].y=f[i].z=0.0;
-
+    f[N-1].x+=F_ext;
     for (int i=0; i<N-1; i++) {
         Vec3 d = resta(beads[i+1].r, beads[i].r);
         double l = norma(d);
@@ -66,6 +69,7 @@ void calcula_fuerzas(const Bead *beads, Vec3 *f, int N) {
 
         f[i].x += fij.x;   f[i].y += fij.y;   f[i].z += fij.z;
         f[i+1].x -= fij.x; f[i+1].y -= fij.y; f[i+1].z -= fij.z;
+        
     }
 }
 
@@ -81,7 +85,7 @@ double energia_potencial(const Bead *beads, int N) {
 
 double energia_cinetica(const Bead *beads, int N) {
     double ek=0.0;
-    for (int i=0; i<N; i++) {
+    for (int i=1; i<N; i++) {
         double v2 = beads[i].v.x*beads[i].v.x + beads[i].v.y*beads[i].v.y + beads[i].v.z*beads[i].v.z;
         ek += 0.5*M*v2;
     }
@@ -90,6 +94,10 @@ double energia_cinetica(const Bead *beads, int N) {
 
 double distancia_extremo_extremo(const Bead *beads, int N) {
     return norma(resta(beads[N-1].r, beads[0].r));
+}
+double ree_direccion_fuerza(const Bead *beads, int N)
+{
+    return beads[N-1].r.x - beads[0].r.x;
 }
 
 double radio_giro(const Bead *beads, int N) {

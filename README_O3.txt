@@ -46,6 +46,14 @@ o3.exe 16
 o3.exe 32
 o3.exe 64
 
+
+esto es por si el powershell no le apetece trabajar
+""""
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+"""
+
+
+
 Resultados agregados:
 results/O3/resumen_tamanos.dat
 

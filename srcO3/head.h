@@ -11,8 +11,9 @@
 #define B0 1.0
 #define ETA 1.0
 #define H 0.001
-#define TERM_STEPS 1000000L
-#define MEASURE_STEPS 2000000L
+#define F_ext 0.0
+#define TERM_STEPS 10000000L
+#define MEASURE_STEPS 20000000L
 #define SAMPLE_EVERY 100L
 #define SEED 89886523
 #define PI (2.0 * asin(1.0))
@@ -35,6 +36,7 @@ void calcula_fuerzas(const Bead *beads, Vec3 *f, int N);
 double energia_potencial(const Bead *beads, int N);
 double energia_cinetica(const Bead *beads, int N);
 double distancia_extremo_extremo(const Bead *beads, int N);
+double ree_direccion_fuerza(const Bead *beads, int N);
 double radio_giro(const Bead *beads, int N);
 double longitud_media_enlace(const Bead *beads, int N);
 

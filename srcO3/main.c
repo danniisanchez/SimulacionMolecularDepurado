@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     fprintf(f_term,"# t <Ek> <Ep> Ek_teo Ep_teo\n");
     fprintf(f_med,"# t Ek Ep Ree Rg longitud_media_enlace\n");
 
-    const double ek_teo=1.5*N*KBT;
+    const double ek_teo=1.5*(N-1)*KBT;
     const double ep_teo=0.5*(N-1)*KBT;
 
     printf("O3: N=%d, kBT=%g, ke=%g, b=%g, eta=%g, h=%g\n",N,KBT,KE,B0,ETA,H);
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
     printf("Midiendo...\n");
     long n_muestras=0;
     double sum_ek=0.0, sum_ep=0.0, sum_ree=0.0, sum_ree2=0.0;
-    double sum_rg=0.0, sum_rg2=0.0, sum_bond=0.0;
+    double sum_rg=0.0, sum_rg2=0.0, sum_bond=0.0 , sum_ree_dir=0.0; 
 
     for (long i=0; i<MEASURE_STEPS; i++) {
         paso_verlet_gjf(beads,N,f_old,f_new,beta);
@@ -82,9 +82,10 @@ int main(int argc, char **argv) {
             double t=(i+1)*H;
             double ek=energia_cinetica(beads,N), ep=energia_potencial(beads,N);
             double ree=distancia_extremo_extremo(beads,N), rg=radio_giro(beads,N);
+            double ree_dir=ree_direccion_fuerza(beads,N);
             double bond=longitud_media_enlace(beads,N);
 
-            fprintf(f_med,"%.10g %.10g %.10g %.10g %.10g %.10g\n",t,ek,ep,ree,rg,bond);
+            fprintf(f_med,"%.10g %.10g %.10g %.10g %.10g %.10g %.10g\n",t,ek,ep,ree,rg,bond,ree_dir);
             sum_ek+=ek; sum_ep+=ep; sum_ree+=ree; sum_ree2+=ree*ree;
             sum_rg+=rg; sum_rg2+=rg*rg; sum_bond+=bond; n_muestras++;
         }
@@ -96,19 +97,20 @@ int main(int argc, char **argv) {
     double ree_mean=sum_ree/n_muestras, ree2_mean=sum_ree2/n_muestras;
     double rg_mean=sum_rg/n_muestras, rg2_mean=sum_rg2/n_muestras;
     double bond_mean=sum_bond/n_muestras;
+    double ree_dir_mean=sum_ree_dir/n_muestras;
 
     FILE *f_res=fopen(nombre_res,"w");
     if (f_res) {
-        fprintf(f_res,"# N Ek_mean Ek_teo Ep_mean Ep_teo Ree_mean Ree2_mean Rg_mean Rg2_mean bond_mean muestras\n");
-        fprintf(f_res,"%d %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %ld\n",
-                N,ek_mean,ek_teo,ep_mean,ep_teo,ree_mean,ree2_mean,rg_mean,rg2_mean,bond_mean,n_muestras);
+        fprintf(f_res,"# N Ek_mean Ek_teo Ep_mean Ep_teo Ree_mean Ree2_mean Rg_mean Rg2_mean bond_mean ree_dir_mean muestras\n");
+        fprintf(f_res,"%d %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %ld\n",
+                N,ek_mean,ek_teo,ep_mean,ep_teo,ree_mean,ree2_mean,rg_mean,rg2_mean,bond_mean,ree_dir_mean,n_muestras);
         fclose(f_res);
     }
 
     FILE *f_all=fopen("results/O3/resumen_tamanos.dat","a");
     if (f_all) {
-        fprintf(f_all,"%d %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %ld\n",
-                N,ek_mean,ek_teo,ep_mean,ep_teo,ree_mean,ree2_mean,rg_mean,rg2_mean,bond_mean,n_muestras);
+        fprintf(f_all,"%d %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %ld\n",
+                N,ek_mean,ek_teo,ep_mean,ep_teo,ree_mean,ree2_mean,rg_mean,rg2_mean,bond_mean,ree_dir_mean,n_muestras);
         fclose(f_all);
     }
 
