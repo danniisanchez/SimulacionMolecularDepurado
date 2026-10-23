@@ -23,6 +23,7 @@ int main(int argc, char **argv) {
     Vec3 *f_old=calloc((size_t)N,sizeof(Vec3));
     Vec3 *f_new=calloc((size_t)N,sizeof(Vec3));
     Vec3 *beta=calloc((size_t)N,sizeof(Vec3));
+
     if (!beads || !f_old || !f_new || !beta) {
         printf("ERROR: memoria insuficiente para N=%d.\n",N);
         free(beads); free(f_old); free(f_new); free(beta);
@@ -31,13 +32,14 @@ int main(int argc, char **argv) {
 
     inicializa_cadena(beads,N);
 
-    char nombre_term[256], nombre_med[256], nombre_res[256];
+    char nombre_term[256],nombre_med[256],nombre_res[256];
     snprintf(nombre_term,sizeof(nombre_term),"results/O3/N%d/termalizacion_N%d.dat",N,N);
     snprintf(nombre_med,sizeof(nombre_med),"results/O3/N%d/medidas_N%d.dat",N,N);
     snprintf(nombre_res,sizeof(nombre_res),"results/O3/N%d/resumen_N%d.dat",N,N);
 
     FILE *f_term=fopen(nombre_term,"w");
     FILE *f_med=fopen(nombre_med,"w");
+
     if (!f_term || !f_med) {
         printf("ERROR: no se pudieron abrir ficheros de salida para N=%d.\n",N);
         if (f_term) fclose(f_term);
@@ -48,20 +50,28 @@ int main(int argc, char **argv) {
 
     setvbuf(f_term,NULL,_IOFBF,1024*1024);
     setvbuf(f_med,NULL,_IOFBF,1024*1024);
-    fprintf(f_term,"# t <Ek> <Ep> Ek_teo Ep_teo\n");
-    fprintf(f_med,"# t Ek Ep Ree Rg longitud_media_enlace\n");
+
+    fprintf(f_term,"# t <Ek> <Ep_elastica> Ek_teo Ep_teo\n");
+    fprintf(f_med,"# t Ek Ep_elastica Ree Rg longitud_media_enlace Ree_parallel\n");
 
     const double ek_teo=1.5*(N-1)*KBT;
     const double ep_teo=0.5*(N-1)*KBT;
 
-    printf("O3: N=%d, kBT=%g, ke=%g, b=%g, eta=%g, h=%g\n",N,KBT,KE,B0,ETA,H);
+    printf("O3: N=%d, kBT=%g, ke=%g, b=%g, eta=%g, h=%g, F_ext=%g\n",
+           N,KBT,KE,B0,ETA,H,F_ext);
+
     printf("Termalizando...\n");
 
-    double suma_ek_term=0.0, suma_ep_term=0.0;
-    for (long i=0; i<TERM_STEPS; i++) {
+    double suma_ek_term=0.0,suma_ep_term=0.0;
+
+    for (long i=0;i<TERM_STEPS;i++) {
         paso_verlet_gjf(beads,N,f_old,f_new,beta);
-        double ek=energia_cinetica(beads,N), ep=energia_potencial(beads,N);
-        suma_ek_term+=ek; suma_ep_term+=ep;
+
+        double ek=energia_cinetica(beads,N);
+        double ep=energia_potencial(beads,N);
+
+        suma_ek_term+=ek;
+        suma_ep_term+=ep;
 
         if (((i+1)%SAMPLE_EVERY==0) || i==TERM_STEPS-1) {
             double t=(i+1)*H;
@@ -71,55 +81,71 @@ int main(int argc, char **argv) {
     }
 
     printf("Midiendo...\n");
-    long n_muestras=0;
-    double sum_ek=0.0, sum_ep=0.0, sum_ree=0.0, sum_ree2=0.0;
-    double sum_rg=0.0, sum_rg2=0.0, sum_bond=0.0 , sum_ree_dir=0.0; 
 
-    for (long i=0; i<MEASURE_STEPS; i++) {
+    long n_muestras=0;
+    double sum_ek=0.0,sum_ep=0.0,sum_ree=0.0,sum_ree2=0.0;
+    double sum_rg=0.0,sum_rg2=0.0,sum_bond=0.0,sum_ree_dir=0.0;
+
+    for (long i=0;i<MEASURE_STEPS;i++) {
         paso_verlet_gjf(beads,N,f_old,f_new,beta);
 
         if (((i+1)%SAMPLE_EVERY==0) || i==MEASURE_STEPS-1) {
             double t=(i+1)*H;
-            double ek=energia_cinetica(beads,N), ep=energia_potencial(beads,N);
-            double ree=distancia_extremo_extremo(beads,N), rg=radio_giro(beads,N);
-            double ree_dir=ree_direccion_fuerza(beads,N);
+            double ek=energia_cinetica(beads,N);
+            double ep=energia_potencial(beads,N);
+            double ree=distancia_extremo_extremo(beads,N);
+            double rg=radio_giro(beads,N);
             double bond=longitud_media_enlace(beads,N);
+            double ree_dir=ree_direccion_fuerza(beads,N);
 
-            fprintf(f_med,"%.10g %.10g %.10g %.10g %.10g %.10g %.10g\n",t,ek,ep,ree,rg,bond,ree_dir);
-            sum_ek+=ek; sum_ep+=ep; sum_ree+=ree; sum_ree2+=ree*ree;
-            sum_rg+=rg; sum_rg2+=rg*rg; sum_bond+=bond; n_muestras++;
+            fprintf(f_med,"%.10g %.10g %.10g %.10g %.10g %.10g %.10g\n",
+                    t,ek,ep,ree,rg,bond,ree_dir);
+
+            sum_ek+=ek; sum_ep+=ep;
+            sum_ree+=ree; sum_ree2+=ree*ree;
+            sum_rg+=rg; sum_rg2+=rg*rg;
+            sum_bond+=bond; sum_ree_dir+=ree_dir;
+            n_muestras++;
         }
     }
 
-    fclose(f_term); fclose(f_med);
+    fclose(f_term);
+    fclose(f_med);
 
-    double ek_mean=sum_ek/n_muestras, ep_mean=sum_ep/n_muestras;
-    double ree_mean=sum_ree/n_muestras, ree2_mean=sum_ree2/n_muestras;
-    double rg_mean=sum_rg/n_muestras, rg2_mean=sum_rg2/n_muestras;
+    if (n_muestras==0) {
+        printf("ERROR: no se ha guardado ninguna muestra.\n");
+        free(beads); free(f_old); free(f_new); free(beta);
+        return 1;
+    }
+
+    double ek_mean=sum_ek/n_muestras;
+    double ep_mean=sum_ep/n_muestras;
+    double ree_mean=sum_ree/n_muestras;
+    double ree2_mean=sum_ree2/n_muestras;
+    double rg_mean=sum_rg/n_muestras;
+    double rg2_mean=sum_rg2/n_muestras;
     double bond_mean=sum_bond/n_muestras;
     double ree_dir_mean=sum_ree_dir/n_muestras;
 
     FILE *f_res=fopen(nombre_res,"w");
     if (f_res) {
-        fprintf(f_res,"# N Ek_mean Ek_teo Ep_mean Ep_teo Ree_mean Ree2_mean Rg_mean Rg2_mean bond_mean ree_dir_mean muestras\n");
-        fprintf(f_res,"%d %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %ld\n",
-                N,ek_mean,ek_teo,ep_mean,ep_teo,ree_mean,ree2_mean,rg_mean,rg2_mean,bond_mean,ree_dir_mean,n_muestras);
+        fprintf(f_res,"# N Ek_mean Ek_teo Ep_mean Ep_teo Ree_mean Ree2_mean Rg_mean Rg2_mean bond_mean muestras Ree_parallel_mean\n");
+        fprintf(f_res,"%d %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %ld %.12g\n",
+                N,ek_mean,ek_teo,ep_mean,ep_teo,ree_mean,ree2_mean,
+                rg_mean,rg2_mean,bond_mean,n_muestras,ree_dir_mean);
         fclose(f_res);
-    }
-
-    FILE *f_all=fopen("results/O3/resumen_tamanos.dat","a");
-    if (f_all) {
-        fprintf(f_all,"%d %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %ld\n",
-                N,ek_mean,ek_teo,ep_mean,ep_teo,ree_mean,ree2_mean,rg_mean,rg2_mean,bond_mean,ree_dir_mean,n_muestras);
-        fclose(f_all);
     }
 
     guarda_snapshot(beads,N);
 
     printf("\n--- RESUMEN N=%d ---\n",N);
-    printf("<Ek> = %.8g   teoria = %.8g   ratio = %.6f\n",ek_mean,ek_teo,ek_mean/ek_teo);
-    printf("<Ep> = %.8g   referencia armonica = %.8g   ratio = %.6f\n",ep_mean,ep_teo,ep_mean/ep_teo);
-    printf("<Ree> = %.8g\n<Rg>  = %.8g\n<l>   = %.8g (b=%g)\n",ree_mean,rg_mean,bond_mean,B0);
+    printf("F_ext          = %.8g\n",F_ext);
+    printf("<Ek>           = %.8g   teoria = %.8g   ratio = %.6f\n",ek_mean,ek_teo,ek_mean/ek_teo);
+    printf("<Ep_elastica>  = %.8g   referencia F=0 = %.8g\n",ep_mean,ep_teo);
+    printf("<Ree>          = %.8g\n",ree_mean);
+    printf("<Ree_parallel> = %.8g\n",ree_dir_mean);
+    printf("<Rg>           = %.8g\n",rg_mean);
+    printf("<l>            = %.8g   (b=%g)\n",bond_mean,B0);
 
     free(beads); free(f_old); free(f_new); free(beta);
     return 0;
