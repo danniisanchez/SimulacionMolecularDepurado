@@ -46,6 +46,10 @@ o3.exe 16
 o3.exe 32
 o3.exe 64
 
+Para k_e=1000, la mayor rigidez de los enlaces desplaza el inicio de la extensibilidad a fuerzas mayores,
+extendiendo el intervalo de fuerzas en el que el polímero se aproxima al FJC inextensible. Sin embargo, al 
+tratarse de enlaces armónicos, no existe una longitud máxima estricta; para F~k_e·b el estiramiento 
+de los enlaces vuelve a dominar y la extensión supera el límite del FJC ideal.
 
 esto es por si el powershell no le apetece trabajar
 """"

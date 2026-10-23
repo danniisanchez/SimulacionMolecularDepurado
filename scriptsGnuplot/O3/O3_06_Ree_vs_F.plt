@@ -46,7 +46,7 @@ plot archivo using 1:2 with linespoints lw 2 pt 7 ps 1.0 title "Simulacion", \
      Lcont with lines dt 3 lw 2 title "(N-1)b"
 
 set title "Regimen debil e intermedio"
-set xrange [0:10]
+set xrange [0:100]
 set xlabel "Fuerza externa F"
 set ylabel "<R_{ee,parallel}> / [(N-1)b]"
 set yrange [0:1.2]

@@ -7,11 +7,11 @@
 
 #define M 1.0
 #define KBT 1.0
-#define KE 100.0
+#define KE 1000.0
 #define B0 1.0
 #define ETA 1.0
 #define H 0.001
-#define F_ext 0
+#define F_ext 0.0
 #define TERM_STEPS 10000000L
 #define MEASURE_STEPS 20000000L
 #define SAMPLE_EVERY 100L
@@ -46,5 +46,7 @@ int asegura_directorios(int N);
 void guarda_snapshot(const Bead *beads, int N);
 
 #endif
+
+
 
 

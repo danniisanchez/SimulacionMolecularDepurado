@@ -23,7 +23,7 @@ set title sprintf("Extension frente a fuerza - barrido logaritmico, N=%d",N)
 set xlabel "Fuerza externa F"
 set ylabel "<R_{ee,parallel}>"
 set logscale x
-set xrange [0.001:200]
+set xrange [0.001:1250]
 set grid
 set key top left
 
