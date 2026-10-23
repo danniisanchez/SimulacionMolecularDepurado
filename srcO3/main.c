@@ -4,13 +4,14 @@ static int N_permitido(int N) {
     return N==4 || N==8 || N==16 || N==32 || N==64;
 }
 
-int main(int argc, char **argv) {
+int main(int argc,char **argv) {
     if (argc!=2) {
         printf("Uso: %s N\nValores previstos: 4, 8, 16, 32, 64\n",argv[0]);
         return 1;
     }
 
     int N=atoi(argv[1]);
+
     if (!N_permitido(N)) {
         printf("ERROR: N=%d no pertenece al barrido previsto.\n",N);
         return 1;
@@ -41,7 +42,7 @@ int main(int argc, char **argv) {
     FILE *f_med=fopen(nombre_med,"w");
 
     if (!f_term || !f_med) {
-        printf("ERROR: no se pudieron abrir ficheros de salida para N=%d.\n",N);
+        printf("ERROR: no se pudieron abrir ficheros para N=%d.\n",N);
         if (f_term) fclose(f_term);
         if (f_med) fclose(f_med);
         free(beads); free(f_old); free(f_new); free(beta);
@@ -51,66 +52,66 @@ int main(int argc, char **argv) {
     setvbuf(f_term,NULL,_IOFBF,1024*1024);
     setvbuf(f_med,NULL,_IOFBF,1024*1024);
 
-    fprintf(f_term,"# t <Ek> <Ep_elastica> Ek_teo Ep_teo\n");
-    fprintf(f_med,"# t Ek Ep_elastica Ree Rg longitud_media_enlace Ree_parallel\n");
+    fprintf(f_term,"# t <Ek> <Ebond> <Ebend> <Eev> Ek_teo\n");
+    fprintf(f_med,"# t Ek Ebond Ebend Eev Ree Rg bond Ree_parallel theta_mean cos_theta_mean dmin_nonbonded\n");
 
     const double ek_teo=1.5*(N-1)*KBT;
-    const double ep_teo=0.5*(N-1)*KBT;
 
-    printf("O3: N=%d, kBT=%g, ke=%g, b=%g, eta=%g, h=%g, F_ext=%g\n",
-           N,KBT,KE,B0,ETA,H,F_ext);
+    printf("O3 EV: N=%d, WCA=%d, eps=%g, sigma=%g, bending=%d, Kbend=%g\n",
+           N,USE_EXCLUDED_VOLUME,EPSILON_EV,SIGMA_EV,BENDING_MODEL,KBEND);
 
     printf("Termalizando...\n");
 
-    double suma_ek_term=0.0,suma_ep_term=0.0;
+    double sek_t=0.0,sep_t=0.0,seb_t=0.0,sev_t=0.0;
 
     for (long i=0;i<TERM_STEPS;i++) {
         paso_verlet_gjf(beads,N,f_old,f_new,beta);
 
         double ek=energia_cinetica(beads,N);
         double ep=energia_potencial(beads,N);
+        double eb=energia_bending(beads,N);
+        double ev=energia_excluded(beads,N);
 
-        suma_ek_term+=ek;
-        suma_ep_term+=ep;
+        sek_t+=ek; sep_t+=ep; seb_t+=eb; sev_t+=ev;
 
         if (((i+1)%SAMPLE_EVERY==0) || i==TERM_STEPS-1) {
             double t=(i+1)*H;
-            fprintf(f_term,"%.10g %.10g %.10g %.10g %.10g\n",
-                    t,suma_ek_term/(i+1),suma_ep_term/(i+1),ek_teo,ep_teo);
+            fprintf(f_term,"%.10g %.10g %.10g %.10g %.10g %.10g\n",
+                    t,sek_t/(i+1),sep_t/(i+1),seb_t/(i+1),sev_t/(i+1),ek_teo);
         }
     }
 
     printf("Midiendo...\n");
 
     long n_muestras=0;
-    double sum_ek=0.0,sum_ep=0.0,sum_ree=0.0,sum_ree2=0.0;
-    double sum_rg=0.0,sum_rg2=0.0,sum_bond=0.0,sum_ree_dir=0.0;
+    double sek=0.0,sep=0.0,seb=0.0,sev=0.0,sree=0.0,sree2=0.0;
+    double srg=0.0,srg2=0.0,sbond=0.0,sree_dir=0.0,stheta=0.0,scos=0.0,sdmin=0.0;
 
     for (long i=0;i<MEASURE_STEPS;i++) {
         paso_verlet_gjf(beads,N,f_old,f_new,beta);
 
         if (((i+1)%SAMPLE_EVERY==0) || i==MEASURE_STEPS-1) {
             double t=(i+1)*H;
-            double ek=energia_cinetica(beads,N);
-            double ep=energia_potencial(beads,N);
-            double ree=distancia_extremo_extremo(beads,N);
-            double rg=radio_giro(beads,N);
-            double bond=longitud_media_enlace(beads,N);
-            double ree_dir=ree_direccion_fuerza(beads,N);
+            double ek=energia_cinetica(beads,N),ep=energia_potencial(beads,N);
+            double eb=energia_bending(beads,N),ev=energia_excluded(beads,N);
+            double ree=distancia_extremo_extremo(beads,N),rg=radio_giro(beads,N);
+            double bond=longitud_media_enlace(beads,N),ree_dir=ree_direccion_fuerza(beads,N);
+            double theta=angulo_medio(beads,N),ctheta=cos_angulo_medio(beads,N);
+            double dmin=distancia_minima_no_enlazada(beads,N);
 
-            fprintf(f_med,"%.10g %.10g %.10g %.10g %.10g %.10g %.10g\n",
-                    t,ek,ep,ree,rg,bond,ree_dir);
+            fprintf(f_med,"%.10g %.10g %.10g %.10g %.10g %.10g %.10g %.10g %.10g %.10g %.10g %.10g\n",
+                    t,ek,ep,eb,ev,ree,rg,bond,ree_dir,theta,ctheta,dmin);
 
-            sum_ek+=ek; sum_ep+=ep;
-            sum_ree+=ree; sum_ree2+=ree*ree;
-            sum_rg+=rg; sum_rg2+=rg*rg;
-            sum_bond+=bond; sum_ree_dir+=ree_dir;
+            sek+=ek; sep+=ep; seb+=eb; sev+=ev;
+            sree+=ree; sree2+=ree*ree;
+            srg+=rg; srg2+=rg*rg;
+            sbond+=bond; sree_dir+=ree_dir;
+            stheta+=theta; scos+=ctheta; sdmin+=dmin;
             n_muestras++;
         }
     }
 
-    fclose(f_term);
-    fclose(f_med);
+    fclose(f_term); fclose(f_med);
 
     if (n_muestras==0) {
         printf("ERROR: no se ha guardado ninguna muestra.\n");
@@ -118,34 +119,38 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    double ek_mean=sum_ek/n_muestras;
-    double ep_mean=sum_ep/n_muestras;
-    double ree_mean=sum_ree/n_muestras;
-    double ree2_mean=sum_ree2/n_muestras;
-    double rg_mean=sum_rg/n_muestras;
-    double rg2_mean=sum_rg2/n_muestras;
-    double bond_mean=sum_bond/n_muestras;
-    double ree_dir_mean=sum_ree_dir/n_muestras;
+    double ek_mean=sek/n_muestras,ep_mean=sep/n_muestras,eb_mean=seb/n_muestras;
+    double ev_mean=sev/n_muestras,ree_mean=sree/n_muestras,ree2_mean=sree2/n_muestras;
+    double rg_mean=srg/n_muestras,rg2_mean=srg2/n_muestras,bond_mean=sbond/n_muestras;
+    double ree_dir_mean=sree_dir/n_muestras,theta_mean=stheta/n_muestras;
+    double cos_theta_mean=scos/n_muestras,dmin_mean=sdmin/n_muestras;
 
     FILE *f_res=fopen(nombre_res,"w");
+
     if (f_res) {
-        fprintf(f_res,"# N Ek_mean Ek_teo Ep_mean Ep_teo Ree_mean Ree2_mean Rg_mean Rg2_mean bond_mean muestras Ree_parallel_mean\n");
-        fprintf(f_res,"%d %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %ld %.12g\n",
-                N,ek_mean,ek_teo,ep_mean,ep_teo,ree_mean,ree2_mean,
-                rg_mean,rg2_mean,bond_mean,n_muestras,ree_dir_mean);
+        fprintf(f_res,"# N Ek_mean Ek_teo Ebond_mean Ebond_ref Ree_mean Ree2_mean Rg_mean Rg2_mean bond_mean muestras Ree_parallel_mean Ebend_mean theta_mean cos_theta_mean bending_model KBEND Eev_mean dmin_mean use_EV epsilon_EV sigma_EV\n");
+        fprintf(f_res,"%d %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g %ld %.12g %.12g %.12g %.12g %d %.12g %.12g %.12g %d %.12g %.12g\n",
+                N,ek_mean,ek_teo,ep_mean,0.5*(N-1)*KBT,ree_mean,ree2_mean,
+                rg_mean,rg2_mean,bond_mean,n_muestras,ree_dir_mean,eb_mean,
+                theta_mean,cos_theta_mean,BENDING_MODEL,KBEND,ev_mean,dmin_mean,
+                USE_EXCLUDED_VOLUME,EPSILON_EV,SIGMA_EV);
         fclose(f_res);
     }
 
     guarda_snapshot(beads,N);
 
-    printf("\n--- RESUMEN N=%d ---\n",N);
-    printf("F_ext          = %.8g\n",F_ext);
-    printf("<Ek>           = %.8g   teoria = %.8g   ratio = %.6f\n",ek_mean,ek_teo,ek_mean/ek_teo);
-    printf("<Ep_elastica>  = %.8g   referencia F=0 = %.8g\n",ep_mean,ep_teo);
-    printf("<Ree>          = %.8g\n",ree_mean);
-    printf("<Ree_parallel> = %.8g\n",ree_dir_mean);
-    printf("<Rg>           = %.8g\n",rg_mean);
-    printf("<l>            = %.8g   (b=%g)\n",bond_mean,B0);
+    printf("\n--- RESUMEN EV N=%d ---\n",N);
+    printf("USE_EV       = %d\n",USE_EXCLUDED_VOLUME);
+    printf("epsilon      = %.8g\n",EPSILON_EV);
+    printf("sigma        = %.8g\n",SIGMA_EV);
+    printf("<Ek>         = %.8g   teoria = %.8g\n",ek_mean,ek_teo);
+    printf("<Ebond>      = %.8g\n",ep_mean);
+    printf("<Ebend>      = %.8g\n",eb_mean);
+    printf("<Eev>        = %.8g\n",ev_mean);
+    printf("<Ree>        = %.8g\n",ree_mean);
+    printf("<Rg>         = %.8g\n",rg_mean);
+    printf("<dmin>       = %.8g\n",dmin_mean);
+    printf("<l>          = %.8g\n",bond_mean);
 
     free(beads); free(f_old); free(f_new); free(beta);
     return 0;

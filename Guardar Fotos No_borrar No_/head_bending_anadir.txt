@@ -1,0 +1,16 @@
+/* ===== Añadir a tu head.h actual para bending armónico ===== */
+
+#define USE_BENDING 1
+#define KBEND 5.0
+#define THETA0 0.0
+
+/* Si aún no existe por la parte de fuerza-extensión: */
+/* #define F_ext 0.0 */
+
+void calcula_fuerzas_bending(const Bead *beads,Vec3 *f,int N);
+double energia_bending(const Bead *beads,int N);
+double angulo_medio(const Bead *beads,int N);
+double cos_angulo_medio(const Bead *beads,int N);
+
+/* Debe existir también de la fase anterior: */
+double ree_direccion_fuerza(const Bead *beads,int N);

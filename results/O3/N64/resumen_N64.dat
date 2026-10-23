@@ -1,2 +1,2 @@
-# N Ek_mean Ek_teo Ep_mean Ep_teo Ree_mean Ree2_mean Rg_mean Rg2_mean bond_mean muestras Ree_parallel_mean
-64 94.394393019 94.5 31563.3077099 31.5 125.969874504 15868.471851 36.9374213705 1364.37942881 2.00050489472 200000 125.968881491
+# N Ek_mean Ek_teo Ebond_mean Ebond_ref Ree_mean Ree2_mean Rg_mean Rg2_mean bond_mean muestras Ree_parallel_mean Ebend_mean theta_mean cos_theta_mean bending_model KBEND Eev_mean dmin_mean use_EV epsilon_EV sigma_EV
+64 94.5453376837 94.5 33.0219041376 31.5 16.2180379168 276.450907219 6.17763398714 39.1646080079 1.02569449292 20000 2.31077553954 0 1.20013618999 0.31608663263 0 0.5 1.2953983547 1.0247108052 1 1 1
