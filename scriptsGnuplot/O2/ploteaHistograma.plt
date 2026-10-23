@@ -1,11 +1,11 @@
 # Definición de variables
 h = "0.001"
-eta = "5"
-A = 1.2
+eta = "0.1"
+A = 1
 metodo = "Verlet"
 
 # Rutas de entrada y salida
-input_file = sprintf("../../results/O2/%s/Histogramas_%s_%s_%s.txt", metodo, h, eta, metodo)
+input_file = sprintf("../../results/O2/%s/Histogramas_h%s_A%g_eta%s_%s.txt", metodo, h, A, eta, metodo)
 output_file = sprintf("../../plots/O2/%s/Histogramas_%s_eta%s_A%g_%s.png", metodo, h, eta, A, metodo)
 
 # Configuración del terminal 
@@ -30,19 +30,17 @@ set grid
 set style fill solid 0.5 border -1
 set xrange [-2:2]
 
-# Distribución teórica de Boltzmann P(x) para el doble pozo
-# C es la constante de normalización aproximada para A=1.0 y KBT=0.2
-C = 1.45 
+# 1. Pon aquí la constante exacta que te imprimió tu programa en C
+C = 0.803054
 P_teorica_x(x) = C * exp(-(A * (x**2 - 1.0)**2) / KBT)
 
-# Ancho de bin usando la columna 1 (x_centro)
+# 2. Calculamos el ancho de la caja (bin)
 stats input_file using 1 nooutput
 bin_pos = (STATS_max - STATS_min) / (STATS_records - 1)
 
-# Dibujar el histograma de posiciones (columnas 1 y 2)
+# 3. Dibujamos el histograma directamente (el C ya lo entrega normalizado)
 plot input_file using 1:2:(bin_pos) title "Simulación" with boxes linecolor rgb "blue", \
      P_teorica_x(x) title "Teórica" with lines linewidth 2 linecolor rgb "black"
-
 # ==========================================
 # PLOT 2: VELOCIDADES (Derecha)
 # ==========================================
