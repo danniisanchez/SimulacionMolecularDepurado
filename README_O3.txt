@@ -38,7 +38,7 @@ Uso:
    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 3) Ejecutar:
    .\barrido_tamanos_O3.ps1
-
+   .\barrido_fuerza_Ree_O3.ps1
 El codigo se compila una sola vez. El script ejecuta luego:
 o3.exe 4
 o3.exe 8
