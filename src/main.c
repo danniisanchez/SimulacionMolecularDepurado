@@ -123,6 +123,8 @@ int main(void) {
     printf("Criterio: min=%ld max=%ld bloque=%ld estables=%d\n",
            (long)TERM_MIN_STEPS,(long)TERM_MAX_STEPS,
            (long)TERM_BLOCK_STEPS,TERM_STABLE_BLOCKS);
+    printf("Limite adaptado al caso: TERM_MAX=%ld, MEASURE_MAX=%ld\n",
+           (long)TERM_MAX_STEPS,(long)MEASURE_MAX_STEPS);
 
     long term_steps_used=0;
     int term_converged=0,stable_blocks=0,term_global_ok=0;
@@ -263,12 +265,15 @@ int main(void) {
         idx_energia++;
     }
 
-    if (term_converged)
+    if (term_converged) {
         printf("Termalizacion convergida en %ld pasos (t=%g).\n",
                term_steps_used,term_steps_used*paso_h);
-    else
+    } else {
         printf("[AVISO] Se alcanzo TERM_MAX_STEPS=%ld sin cumplir todos los criterios.\n",
                (long)TERM_MAX_STEPS);
+        printf("[AVISO] Este punto queda marcado como NO termalizado; no debe interpretarse "
+               "como dato de equilibrio de alta calidad.\n");
+    }
 
     printf("Boltzmann usado en medida: Pizq=%g Pder=%g C=%g\n",
            Pizq_teoria,Pder_teoria,C_teorica);
@@ -482,9 +487,11 @@ int main(void) {
     }
 
     if (!stats_converged && doble_pozo_metastable) {
-        printf("[AVISO] Se alcanzo el limite de medida con %ld estancias "
-               "(izq=%ld, der=%ld); la estadistica puede ser insuficiente.\n",
+        printf("[AVISO] Se alcanzo el limite extendido de medida con %ld estancias "
+               "(izq=%ld, der=%ld); la estadistica sigue siendo insuficiente.\n",
                estancias_totales,estancias_izq,estancias_der);
+        printf("[AVISO] Se conserva el resultado y stats_converged=0 para no ocultar "
+               "el caso raro.\n");
     }
 
     FILE *f_resumen=fopen(nombre_resumen,"w");

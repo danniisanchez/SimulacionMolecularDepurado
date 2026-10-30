@@ -1,10 +1,10 @@
 
 
 *******************************************************************************
-Fri Oct 30 10:59:38 2026
+Fri Oct 30 12:32:38 2026
 
 
-FIT:    data read from archivo using 1:(log($9))
+FIT:    data read from archivo using 1:($14==1 ? log($9) : 1/0)
         format = x:z
         #datapoints = 9
         residuals are weighted equally (unit weight)
@@ -14,23 +14,23 @@ function used for fitting: f(x)
 fitted parameters initialized with current variable values
 
 iter      chisq       delta/lim  lambda   m             b            
-   0 1.0383770007e+00   0.00e+00  4.42e+00    5.000000e+00   1.000000e+00
-   4 2.7346121707e-02  -2.20e-01  4.42e-04    4.229635e+00   1.899776e+00
+   0 2.1847885141e+00   0.00e+00  2.71e+00    5.000000e+00   1.000000e+00
+   4 2.2596536559e-02  -7.19e-03  2.71e-04    3.960438e+00   2.115299e+00
 
 After 4 iterations the fit converged.
-final sum of squares of residuals : 0.0273461
-rel. change during last iteration : -2.20271e-06
+final sum of squares of residuals : 0.0225965
+rel. change during last iteration : -7.19048e-08
 
 degrees of freedom    (FIT_NDF)                        : 7
-rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.0625027
-variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00390659
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.0568162
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00322808
 
 Final set of parameters            Asymptotic Standard Error
 =======================            ==========================
-m               = 4.22963          +/- 0.04791      (1.133%)
-b               = 1.89978          +/- 0.05915      (3.113%)
+m               = 3.96044          +/- 0.06921      (1.748%)
+b               = 2.1153           +/- 0.0513       (2.425%)
 
 correlation matrix of the fit parameters:
                 m      b      
 m               1.000 
-b              -0.936  1.000 
+b              -0.929  1.000 

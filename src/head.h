@@ -17,9 +17,15 @@
 #define flag 2
 #define flag_Objetivo 2
 
-/* Limites duros; la parada real es adaptativa. */
-#define termSteps 150000000L
-#define numberSteps 300000000L
+/* Limites duros; la parada real es adaptativa.
+ * El master puede sustituirlos caso a caso:
+ *   normal    : 2e8 / 4e8
+ *   dificil   : 4e8 / 9e8
+ *   extremo   : 6e8 / 1.5e9
+ * (termalizacion / medida).
+ */
+#define termSteps 200000000L
+#define numberSteps 400000000L
 
 /* Termalizacion adaptativa */
 #define TERM_MIN_STEPS 1000000L
@@ -46,6 +52,9 @@
 #define MEASURE_CHECK_EVERY 500000L
 #define MEASURE_TOL_OCC 0.03
 #define MEASURE_MAX_RELERR_TAU 0.08
+
+/* Marca de version para que el automatizador no mezcle nucleos. */
+#define O2_V8_EXTENDED_SWEEPS 1
 
 /* Salida. Se desacopla la resolucion del limite maximo:
  * si una simulacion facil para pronto, no pierde resolucion por tener

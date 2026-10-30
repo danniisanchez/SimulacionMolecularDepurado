@@ -5,7 +5,7 @@ param(
 )
 
 # ============================================================
-# OBJETIVO 2 - AUTOMATIZADOR MAESTRO
+# OBJETIVO 2 - AUTOMATIZADOR MAESTRO v8
 #
 # Ejecutar desde la raiz del repositorio:
 #   .\O2_master.ps1
@@ -44,9 +44,19 @@ $metodo = "Verlet"
 $h = 0.001
 $XC = 0.2
 
-$Avals   = @(0.5,0.7,0.9,1.0,1.1,1.2,1.4,1.6,2.0)
-$Etavals = @(0.01,0.03,0.1,0.3,0.5,1.0,2.0,3.0,5.0)
-$Fvals   = @(-0.4,-0.3,-0.2,-0.15,-0.1,-0.05,0.0,0.05,0.1,0.15,0.2,0.3,0.4)
+# Barridos v8: mas extremos + mas puntos intermedios.
+# A: desde barrera muy baja (0.25) hasta barrera rara (2.2).
+$Avals = @(0.25,0.35,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.8,2.0,2.2)
+
+# eta: cubre mas profundamente baja friccion, turnover y alta friccion.
+$Etavals = @(0.005,0.01,0.02,0.03,0.05,0.1,0.2,0.3,0.5,0.7,1.0,1.5,2.0,3.0,5.0,7.0,10.0)
+
+# Fuerza: paso 0.05 desde -0.5 hasta +0.5.
+# Para A_force=1 esto rompe la simetria con fuerza, pero NO elimina
+# matematicamente uno de los pozos (Fcrit ~= 1.5396).
+$Fvals = @(-0.50,-0.45,-0.40,-0.35,-0.30,-0.25,-0.20,-0.15,-0.10,-0.05,
+           0.00,
+           0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50)
 
 $A_etaSweep = 1.0
 $eta_ASweep = 1.0
@@ -90,6 +100,46 @@ function Ensure-Dirs {
     }
 }
 
+function Get-Limits([double]$Aval,[double]$Etaval,[double]$Fval) {
+    # Límite NORMAL: la mayoría de puntos.
+    [long]$termMax = 200000000
+    [long]$measMax = 400000000
+    $clase = "normal"
+
+    # Casos de mezcla lenta / Kramers difícil.
+    if(($Aval -ge 1.4) -or ($Etaval -le 0.03) -or ($Etaval -ge 5.0)) {
+        $termMax = 400000000
+        $measMax = 900000000
+        $clase = "dificil"
+    }
+
+    # Extremos: barrera alta o fricción muy extrema.
+    if(($Aval -ge 1.8) -or ($Etaval -le 0.01) -or ($Etaval -ge 10.0)) {
+        $termMax = 600000000
+        $measMax = 1500000000
+        $clase = "extremo"
+    }
+
+    return [PSCustomObject]@{
+        TermMax = $termMax
+        MeasureMax = $measMax
+        Clase = $clase
+    }
+}
+
+function Existing-IsReusable([string]$file) {
+    if(!(Test-Path $file)) { return $false }
+    try {
+        $c = Read-Summary $file
+        # Reusar únicamente si la versión contiene flags v7/v8 y
+        # termalización + mezcla global + estadística están aprobadas.
+        if($c.Count -ge 28) {
+            return (($c[16] -eq "1") -and ($c[17] -eq "1") -and ($c[27] -eq "1"))
+        }
+    } catch {}
+    return $false
+}
+
 function Set-Head([double]$Aval,[double]$Etaval,[double]$Fval) {
     $base = $script:originalHead
     $base = $base -replace '#define\s+A\s+[-+0-9.eE]+',      "#define A $(CFloat $Aval)"
@@ -98,6 +148,12 @@ function Set-Head([double]$Aval,[double]$Etaval,[double]$Fval) {
     $base = $base -replace '#define\s+paso_h\s+[-+0-9.eE]+', "#define paso_h $(CFloat $h)"
     $base = $base -replace '#define\s+flag\s+\d+',            "#define flag 2"
     $base = $base -replace '#define\s+flag_Objetivo\s+\d+',   "#define flag_Objetivo 2"
+
+    $lim = Get-Limits $Aval $Etaval $Fval
+    $base = $base -replace '#define\s+termSteps\s+\d+L',      "#define termSteps $($lim.TermMax)L"
+    $base = $base -replace '#define\s+numberSteps\s+\d+L',    "#define numberSteps $($lim.MeasureMax)L"
+
+    Write-Host "Clase de muestreo: $($lim.Clase) | TERM_MAX=$($lim.TermMax) | MEASURE_MAX=$($lim.MeasureMax)"
     Set-Content $headPath $base -Encoding UTF8
 }
 
@@ -133,9 +189,12 @@ function Resolve-Summary([double]$Aval,[double]$Etaval,[double]$Fval) {
 function Run-Case([double]$Aval,[double]$Etaval,[double]$Fval) {
     $existing=Resolve-Summary $Aval $Etaval $Fval
 
-    if ($ReusarExistentes -and $existing) {
-        Write-Host "[REUSO] A=$(G $Aval) eta=$(G $Etaval) F=$(G $Fval) -> $existing"
+    if ($ReusarExistentes -and $existing -and (Existing-IsReusable $existing)) {
+        Write-Host "[REUSO CONVERGIDO] A=$(G $Aval) eta=$(G $Etaval) F=$(G $Fval) -> $existing"
         return $existing
+    }
+    elseif($ReusarExistentes -and $existing) {
+        Write-Host "[REPETIR] Existe resultado, pero no supera term/global/stats: $existing"
     }
 
     Write-Host ""
@@ -146,7 +205,7 @@ function Run-Case([double]$Aval,[double]$Etaval,[double]$Fval) {
     Set-Head $Aval $Etaval $Fval
 
     # Comprobacion visible de macros escritos en head.h
-    $defs = Select-String -Path $headPath -Pattern '^#define\s+(A|eta|FEXT|paso_h)\s+' |
+    $defs = Select-String -Path $headPath -Pattern '^#define\s+(A|eta|FEXT|paso_h|termSteps|numberSteps)\s+' |
             ForEach-Object { $_.Line.Trim() }
     Write-Host "Parametros C:"
     $defs | ForEach-Object { Write-Host "  $_" }
@@ -433,7 +492,9 @@ function Run-Gnuplots {
 Ensure-Dirs
 
 $headText=Get-Content "src\head.h" -Raw
-if(($headText -notmatch "TERM_TOL_OCC") -or ($headText -notmatch "MEASURE_MAX_RELERR_TAU")) {
+if(($headText -notmatch "TERM_TOL_OCC") -or
+   ($headText -notmatch "MEASURE_MAX_RELERR_TAU") -or
+   ($headText -notmatch "O2_V8_EXTENDED_SWEEPS")) {
     throw "Tu src\\head.h no es la version O2 v7. Copia head_O2_v7.h como src\\head.h."
 }
 
@@ -459,8 +520,8 @@ if(($mainText -notmatch 'TERM_MIN_TRANSITIONS') -or
    ($mainText -notmatch 'MEASURE_MAX_RELERR_TAU') -or
    ($mainText -notmatch 'termalizacion_bloques')) {
     throw @"
-Tu src\main.c no es la version O2 v7 con control de mezcla global.
-Copia main_O2_v7.c como src\main.c antes de ejecutar el automatizador.
+Tu src\main.c no es la version O2 v8 con control de mezcla global.
+Copia main_O2_v8.c como src\main.c antes de ejecutar el automatizador.
 "@
 }
 
@@ -493,6 +554,15 @@ $outF   = "results\O2\resumen_F.dat"
 $header | Set-Content $outA -Encoding UTF8
 $header | Set-Content $outEta -Encoding UTF8
 $header | Set-Content $outF -Encoding UTF8
+
+Write-Host ""
+Write-Host "BARRIDO v8:"
+Write-Host "  A   : $($Avals.Count) puntos, $($Avals[0]) -> $($Avals[-1])"
+Write-Host "  eta : $($Etavals.Count) puntos, $($Etavals[0]) -> $($Etavals[-1])"
+Write-Host "  F   : $($Fvals.Count) puntos, $($Fvals[0]) -> $($Fvals[-1])"
+$FcritForce = 8.0*$A_force/(3.0*[Math]::Sqrt(3.0))
+Write-Host ("  Barrido F usa A={0}; Fcrit={1:N4}. +/-0.5 inclina/rompe simetria, pero mantiene dos minimos." -f $A_force,$FcritForce)
+Write-Host ""
 
 try {
     # 0) Caso de referencia para diagnosticos
