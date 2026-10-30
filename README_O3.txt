@@ -37,6 +37,7 @@ Uso:
 2) Si Windows bloquea scripts en esa sesion:
    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 3) Ejecutar:
+   .\barridos_previos_O2_adaptativos.ps1
    .\barrido_tamanos_O3.ps1
    .\barrido_fuerza_Ree_O3.ps1
    .\barrido_bending_O3.ps1

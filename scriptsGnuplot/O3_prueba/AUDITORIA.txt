@@ -1,0 +1,36 @@
+AUDITORIA GNUPLOT O3
+
+CORREGIDOS DE FORMA MATERIAL
+- O3_03_termalizacion.plt:
+  El original dividia col2/col4 y col3/col5. En el formato actual col4=Ebend y col5=Eev,
+  que pueden ser cero. Ahora usa referencias fisicas explicitas Ek_ref y Ebond_ref.
+- O3_01_equiparticion.plt:
+  Las columnas eran correctas, pero la etiqueta 3*N*kBT/2 era antigua. Con bead 0 fija,
+  la referencia cinetica es la almacenada en Ek_teo = 3(N-1)kBT/2.
+- O3_06_Ree_vs_F.plt:
+  Se conserva el archivo/columnas. El segundo panel se restringe a F<=10 para separar
+  comparacion FJC del regimen de extensibilidad armonica.
+- O3_07_Ree_vs_F_log.plt:
+  Rango x automatico por arriba para admitir futuros puntos F=300..1000 o superiores.
+
+COMPATIBLES; SOLO DOCUMENTADOS/LIMPIADOS
+- O3_02_observables_vs_N.plt
+- O3_04_polimero3D.plt
+- O3_05_ley_escala_Rg.plt
+- O3_B01_Rg_Ree_vs_Kbend.plt
+- O3_B02_angulos_vs_Kbend.plt
+- O3_B03_energias_vs_Kbend.plt
+- O3_EV01_Rg_Ree_vs_N.plt
+- O3_EV02_ley_escala_Rg.plt
+- O3_W01_compara_Rg_Ree.plt
+- O3_W02_compara_angulos.plt
+- O3_W03_compara_energias.plt
+
+OBSERVACION SOBRE fit.log
+El fit.log no indica un fallo sintactico de Gnuplot. Muestra resultados de datos antiguos:
+- O3 base: nu = 0.43009
+- EV ideal: nu = 0.57647
+- EV WCA: nu = 0.67581
+Los fits convergieron numericamente. Si esos exponentes no son satisfactorios, el problema
+es la muestra/dinamica/termalizacion/tamano finito, no las columnas del script.
+Conviene regenerar los datos con la version adaptativa antes de interpretar fisicamente nu.
