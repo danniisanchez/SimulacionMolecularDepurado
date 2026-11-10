@@ -102,21 +102,21 @@ function Ensure-Dirs {
 
 function Get-Limits([double]$Aval,[double]$Etaval,[double]$Fval) {
     # Límite NORMAL: la mayoría de puntos.
-    [long]$termMax = 200000000
-    [long]$measMax = 400000000
+    [long]$termMax = 600000000
+    [long]$measMax = 1200000000
     $clase = "normal"
 
     # Casos de mezcla lenta / Kramers difícil.
     if(($Aval -ge 1.4) -or ($Etaval -le 0.03) -or ($Etaval -ge 5.0)) {
-        $termMax = 400000000
-        $measMax = 900000000
+        $termMax = 1000000000
+        $measMax = 2000000000
         $clase = "dificil"
     }
 
     # Extremos: barrera alta o fricción muy extrema.
     if(($Aval -ge 1.8) -or ($Etaval -le 0.01) -or ($Etaval -ge 10.0)) {
-        $termMax = 600000000
-        $measMax = 1500000000
+        $termMax = 1500000000
+        $measMax = 3000000000
         $clase = "extremo"
     }
 

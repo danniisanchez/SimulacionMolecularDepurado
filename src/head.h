@@ -6,7 +6,7 @@
 #define K 1.0
 
 /* Parametros O2 modificados automaticamente por PowerShell */
-#define A 0.7
+#define A 1.8
 #define FEXT 0.0
 #define KBT 0.2
 
@@ -24,8 +24,8 @@
  *   extremo   : 6e8 / 1.5e9
  * (termalizacion / medida).
  */
-#define termSteps 200000000L
-#define numberSteps 400000000L
+#define termSteps 1500000000L
+#define numberSteps 3000000000L
 
 /* Termalizacion adaptativa */
 #define TERM_MIN_STEPS 1000000L
@@ -94,4 +94,6 @@ extern void creaHistogramasArray(char *nombre_metodo,double h_val,double eta_val
                                  double *x,double *v,long n);
 
 #endif
+
+
 
