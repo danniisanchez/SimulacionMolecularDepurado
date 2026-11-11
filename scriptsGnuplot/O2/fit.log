@@ -34,3 +34,12 @@ correlation matrix of the fit parameters:
                 m      b      
 m               1.000 
 b              -0.929  1.000 
+
+
+*******************************************************************************
+Wed Nov 11 17:56:56 2026
+
+
+FIT:    data read from archivo using 1:($14==1 ? log($9) : 1/0)
+        format = x:z
+BREAK: No data to fit
