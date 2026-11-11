@@ -1,0 +1,7 @@
+N=8
+Keff fit para KE=100  : 99.6798031711
+Keff fit para KE=1000 : 994.792308401
+Cociente Keff1000/Keff100 = 9.97987833797
+Ambos ajustes usan exactamente el mismo conjunto de fuerzas.
+Modelo: Ree_parallel=(N-1)[b L(Fb/kBT)+F/Keff].
+Alta fuerza: pendiente dRee/dF ~ (N-1)/Keff.

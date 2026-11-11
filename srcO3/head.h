@@ -7,7 +7,7 @@
 
 #define M 1.0
 #define KBT 1.0
-#define KE 100.0
+#define KE 1000.0
 #define B0 1.0
 #define ETA 1.0
 #define H 0.001
@@ -17,8 +17,8 @@
  * TERM_STEPS y MEASURE_STEPS se mantienen, pero ahora son limites maximos.
  * El programa puede terminar antes si los criterios adaptativos convergen.
  */
-#define TERM_STEPS 20000000L
-#define MEASURE_STEPS 20000000L
+#define TERM_STEPS 100000000L
+#define MEASURE_STEPS 50000000L
 #define SAMPLE_EVERY 100L
 
 /************* TERMALIZACION ADAPTATIVA O3 *************/
@@ -27,10 +27,10 @@
  * N=4,8 -> 5e4; N=16 -> 2e5; N=32 -> 8e5; N=64 -> 3.2e6.
  * Es solo el minimo: la convergencia por bloques decide cuando parar.
  */
-#define TERM_MIN_N8 50000L
+#define TERM_MIN_N8 1000000L
 #define TERM_MAX_STEPS TERM_STEPS
-#define TERM_BLOCK_STEPS 200000L
-#define TERM_STABLE_BLOCKS 4
+#define TERM_BLOCK_STEPS 500000L
+#define TERM_STABLE_BLOCKS 5
 
 #define TERM_TOL_EK 0.04
 #define TERM_TOL_RG 0.04
@@ -39,16 +39,19 @@
 #define TERM_TOL_EK_THEORY 0.08
 
 /************* MEDIDA ADAPTATIVA O3 ********************/
-#define MEASURE_MIN_STEPS 2000000L
+#define MEASURE_MIN_STEPS 5000000L
 #define MEASURE_MAX_STEPS MEASURE_STEPS
-#define MEASURE_BLOCK_STEPS 250000L
-#define MEASURE_MIN_BLOCKS 6
+#define MEASURE_BLOCK_STEPS 500000L
+#define MEASURE_MIN_BLOCKS 8
 
 /* Error relativo de la media estimado a partir de medias por bloques. */
 #define MEASURE_RELERR_RG 0.03
 #define MEASURE_RELERR_REE 0.05
 
-#define F_ext 0.0
+#define O3_V11_TUTOR_REVIEW 1
+#define O3_V12_KE_COMPARISON 1
+
+#define F_ext 0.10000000000000001
 
 /* 0 = sin bending, 1 = armonico, 2 = WLC */
 #define BENDING_MODEL 0
@@ -101,4 +104,6 @@ int asegura_directorios(int N);
 void guarda_snapshot(const Bead *beads,int N);
 
 #endif
+
+
 
