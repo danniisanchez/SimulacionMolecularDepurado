@@ -44,28 +44,25 @@ $metodo = "Verlet"
 $h = 0.001
 $XC = 0.2
 
-# Barridos v8: mas extremos + mas puntos intermedios.
-# A: desde barrera muy baja (0.25) hasta barrera rara (2.2).
+# 1. Definir solo A = 0.5 en el array del barrido de A
 $Avals = @(0.5)
 
 # eta: cubre mas profundamente baja friccion, turnover y alta friccion.
 $Etavals = @(0.005,0.01,0.02,0.03,0.05,0.1,0.2,0.3,0.5,0.7,1.0,1.5,2.0,3.0,5.0,7.0,10.0)
 
 # Fuerza: paso 0.05 desde -0.5 hasta +0.5.
-# Para A_force=1 esto rompe la simetria con fuerza, pero NO elimina
-# matematicamente uno de los pozos (Fcrit ~= 1.5396).
 $Fvals = @(-0.50,-0.45,-0.40,-0.35,-0.30,-0.25,-0.20,-0.15,-0.10,-0.05,
            0.00,
            0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50)
 
-$A_etaSweep = 1.0
+# 2. Fijar A = 0.5 para los barridos de eta y de Fuerza
+$A_etaSweep = 0.5
 $eta_ASweep = 1.0
-$A_force = 1.0
+$A_force = 0.5
 $eta_force = 1.0
 
-# Caso canonico para energia, histograma, trayectoria y distribucion de estancias.
-# A=0.7 da suficientes saltos con mucha mas facilidad que A=2.
-$Aref = 0.7
+# 3. Fijar el caso de referencia (para histogramas, trayectoria y energía) a A = 0.5
+$Aref = 0.5
 $Etaref = 1.0
 $Fref = 0.0
 

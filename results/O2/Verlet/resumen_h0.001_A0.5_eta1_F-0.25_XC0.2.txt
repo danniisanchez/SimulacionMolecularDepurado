@@ -1,0 +1,2 @@
+# h A eta XC P_izq P_der transiciones estancias_izq estancias_der tau_izq tau_der tau_global k_sim FEXT term_steps measure_steps term_converged stats_converged dEk_term dEp_term dX2_term Pizq_teoria occ_err_term term_mix_trans occ_err_measure relerr_tau_izq relerr_tau_der term_global_ok
+0.001 0.5 1 0.2 0.904923552 0.095076448 601 300 300 188.58863 19.47727 104.03295 0.00961233916754 -0.25 300000000 62500000 0 1 0.0632323486988 0.207947275417 0.0147934827886 0.901234465189 0.00234869566876 2671 0.00368908681118 0.0604480121377 0.0462541259647 1

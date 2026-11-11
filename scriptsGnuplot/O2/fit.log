@@ -43,3 +43,11 @@ Wed Nov 11 17:56:56 2026
 FIT:    data read from archivo using 1:($14==1 ? log($9) : 1/0)
         format = x:z
 BREAK: No data to fit
+
+*******************************************************************************
+Wed Nov 11 19:13:35 2026
+
+
+FIT:    data read from archivo using 1:($14==1 ? log($9) : 1/0)
+        format = x:z
+BREAK: No data to fit
