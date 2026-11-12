@@ -108,3 +108,5 @@ void guarda_snapshot(const Bead *beads,int N);
 
 
 
+
+

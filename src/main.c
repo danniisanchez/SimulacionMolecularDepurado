@@ -59,6 +59,24 @@ int main(void) {
 
     const double xc=0.2;
 
+    /* Copias tipadas: protegen printf/sprintf aunque alguien escriba por error
+     * #define eta 1 en vez de 1.0 en head.h. En las llamadas variadicas, pasar
+     * un int donde %g espera double es comportamiento indefinido.
+     */
+    const double h_run=(double)paso_h;
+    const double A_run=(double)A;
+    const double eta_run=(double)eta;
+    const double F_run=(double)FEXT;
+
+    if (!isfinite(h_run) || h_run<=0.0 ||
+        !isfinite(A_run) || A_run<=0.0 ||
+        !isfinite(eta_run) || eta_run<=0.0 ||
+        !isfinite(F_run)) {
+        printf("ERROR: parametros no validos: h=%g A=%g eta=%g F=%g\n",
+               h_run,A_run,eta_run,F_run);
+        return 1;
+    }
+
     long guardar_cada_local=guardar_cada;
     if (guardar_cada_local<1) guardar_cada_local=1;
 
@@ -119,12 +137,16 @@ int main(void) {
     /************** 1. TERMALIZACION ADAPTATIVA *****/
     /************************************************/
     printf("Termalizando: metodo=%s h=%g eta=%g A=%g FEXT=%g Objetivo=O%d\n",
-           nombre_metodo,paso_h,eta,A,FEXT,flag_Objetivo);
+           nombre_metodo,h_run,eta_run,A_run,F_run,flag_Objetivo);
     printf("Criterio: min=%ld max=%ld bloque=%ld estables=%d\n",
            (long)TERM_MIN_STEPS,(long)TERM_MAX_STEPS,
            (long)TERM_BLOCK_STEPS,TERM_STABLE_BLOCKS);
-    printf("Limite adaptado al caso: TERM_MAX=%ld, MEASURE_MAX=%ld\n",
-           (long)TERM_MAX_STEPS,(long)MEASURE_MAX_STEPS);
+    printf("Limites de produccion: TERM_MIN=%ld TERM_MAX=%ld | MEASURE_MIN=%ld MEASURE_MAX=%ld\n",
+           (long)TERM_MIN_STEPS,(long)TERM_MAX_STEPS,
+           (long)MEASURE_MIN_STEPS,(long)MEASURE_MAX_STEPS);
+    printf("Modo termalizacion: %s; medida forzada hasta maximo: %s\n",
+           TERM_FIXED_STEPS_MODE ? "duracion controlada" : "adaptativa con minimo obligatorio",
+           MEASURE_FORCE_MAX ? "SI" : "NO");
 
     long term_steps_used=0;
     int term_converged=0,stable_blocks=0,term_global_ok=0;
@@ -143,7 +165,7 @@ int main(void) {
     char nombre_term_bloques[300];
     sprintf(nombre_term_bloques,
             "results/O%d/%s/termalizacion_bloques_h%g_A%g_eta%g_F%g_XC%g.txt",
-            flag_Objetivo,nombre_metodo,paso_h,A,eta,FEXT,xc);
+            flag_Objetivo,nombre_metodo,h_run,A_run,eta_run,F_run,xc);
 
     FILE *f_term_bloques=fopen(nombre_term_bloques,"w");
     if (f_term_bloques) {
@@ -151,7 +173,11 @@ int main(void) {
                 "# bloque step t mEk mEp mX2 dEk dEp dX2 errEkTeoria "
                 "Pizq_mix Pizq_teoria errOcc mix_trans local_stable global_ok stable_blocks\n");
     } else {
-        printf("[AVISO] No se pudo crear %s\n",nombre_term_bloques);
+        printf("ERROR: no se pudo crear salida de control de termalizacion: %s\n",
+               nombre_term_bloques);
+        free(t_energia); free(ek_array); free(ep_array);
+        free(t_medida); free(x_array); free(v_array);
+        return 1;
     }
 
     for (long i=0;i<TERM_MAX_STEPS;i++) {
@@ -201,7 +227,7 @@ int main(void) {
             double err_ek_teoria=fabs(mEk-0.5*KBT)/(0.5*KBT);
             int local_stable=0;
 
-            if (term_steps_used>=TERM_MIN_STEPS && isfinite(prev_ek)) {
+            if (isfinite(prev_ek)) {
                 last_dEk=cambio_relativo(mEk,prev_ek,0.5*KBT);
                 last_dEp=cambio_relativo(mEp,prev_ep,KBT);
                 last_dX2=cambio_relativo(mX2,prev_x2,1.0);
@@ -237,14 +263,22 @@ int main(void) {
                 fprintf(f_term_bloques,
                         "%ld %ld %.12g %.12g %.12g %.12g %.12g %.12g %.12g %.12g "
                         "%.12g %.12g %.12g %ld %d %d %d\n",
-                        ibloque,term_steps_used,term_steps_used*paso_h,
+                        ibloque,term_steps_used,(double)term_steps_used*paso_h,
                         mEk,mEp,mX2,last_dEk,last_dEp,last_dX2,err_ek_teoria,
                         Pizq_mix,Pizq_teoria,last_occ_error_term,
                         term_mix_transiciones,local_stable,term_global_ok,stable_blocks);
                 fflush(f_term_bloques);
             }
 
-            if (stable_blocks>=TERM_STABLE_BLOCKS && term_global_ok) {
+            if (TERM_FIXED_STEPS_MODE) {
+                if (term_steps_used>=TERM_MIN_STEPS) {
+                    term_converged=(stable_blocks>=TERM_STABLE_BLOCKS &&
+                                    term_global_ok);
+                    break;
+                }
+            } else if (term_steps_used>=TERM_MIN_STEPS &&
+                       stable_blocks>=TERM_STABLE_BLOCKS &&
+                       term_global_ok) {
                 term_converged=1;
                 break;
             }
@@ -267,10 +301,15 @@ int main(void) {
 
     if (term_converged) {
         printf("Termalizacion convergida en %ld pasos (t=%g).\n",
-               term_steps_used,term_steps_used*paso_h);
+               term_steps_used,(double)term_steps_used*paso_h);
     } else {
-        printf("[AVISO] Se alcanzo TERM_MAX_STEPS=%ld sin cumplir todos los criterios.\n",
-               (long)TERM_MAX_STEPS);
+        if (TERM_FIXED_STEPS_MODE) {
+            printf("[AVISO] Termalizacion fijada en %ld pasos: no se cumplieron todos los criterios.\n",
+                   term_steps_used);
+        } else {
+            printf("[AVISO] Se alcanzo TERM_MAX_STEPS=%ld sin cumplir todos los criterios.\n",
+                   (long)TERM_MAX_STEPS);
+        }
         printf("[AVISO] Este punto queda marcado como NO termalizado; no debe interpretarse "
                "como dato de equilibrio de alta calidad.\n");
     }
@@ -298,22 +337,27 @@ int main(void) {
     long estancias_der=0,estancias_izq=0;
     long transiciones_confirmadas=0;
 
-    char nombre_der[300],nombre_izq[300],nombre_resumen[300];
+    char nombre_der[300],nombre_izq[300],nombre_resumen[300],nombre_zoom[300];
 
     sprintf(nombre_der,
             "results/O%d/%s/tiempos_derecha_h%g_A%g_eta%g_F%g_XC%g.txt",
-            flag_Objetivo,nombre_metodo,paso_h,A,eta,FEXT,xc);
+            flag_Objetivo,nombre_metodo,h_run,A_run,eta_run,F_run,xc);
 
     sprintf(nombre_izq,
             "results/O%d/%s/tiempos_izquierda_h%g_A%g_eta%g_F%g_XC%g.txt",
-            flag_Objetivo,nombre_metodo,paso_h,A,eta,FEXT,xc);
+            flag_Objetivo,nombre_metodo,h_run,A_run,eta_run,F_run,xc);
 
     sprintf(nombre_resumen,
             "results/O%d/%s/resumen_h%g_A%g_eta%g_F%g_XC%g.txt",
-            flag_Objetivo,nombre_metodo,paso_h,A,eta,FEXT,xc);
+            flag_Objetivo,nombre_metodo,h_run,A_run,eta_run,F_run,xc);
+
+    sprintf(nombre_zoom,
+            "results/O%d/%s/datosTrayectoriaZoom_h%g_A%g_eta%g_F%g_%s.txt",
+            flag_Objetivo,nombre_metodo,h_run,A_run,eta_run,F_run,nombre_metodo);
 
     FILE *f_tiempos_der=fopen(nombre_der,"w");
     FILE *f_tiempos_izq=fopen(nombre_izq,"w");
+    FILE *f_zoom=fopen(nombre_zoom,"w");
 
     if (!f_tiempos_der || !f_tiempos_izq) {
         printf("ERROR: No se pudieron crear los archivos de tiempos.\n");
@@ -327,6 +371,16 @@ int main(void) {
     setvbuf(f_tiempos_der,NULL,_IOFBF,1024*1024);
     setvbuf(f_tiempos_izq,NULL,_IOFBF,1024*1024);
 
+    if (!f_zoom) {
+        printf("ERROR: No se pudo crear el zoom obligatorio: %s\n",nombre_zoom);
+        fclose(f_tiempos_der); fclose(f_tiempos_izq);
+        free(t_energia); free(ek_array); free(ep_array);
+        free(t_medida); free(x_array); free(v_array);
+        return 1;
+    }
+    setvbuf(f_zoom,NULL,_IOFBF,1024*1024);
+    fprintf(f_zoom,"# t x v\n");
+
     long measure_steps_used=0,ultimo_guardado_medida=0;
     int stats_converged=0;
 
@@ -335,6 +389,15 @@ int main(void) {
 
         measure_steps_used=i+1;
         double t_actual=(double)measure_steps_used*paso_h;
+
+        /* Ventana corta de alta resolución: no aumenta el tamaño de los arrays
+         * ni la densidad de la trayectoria larga.
+         */
+        if (f_zoom &&
+            measure_steps_used<=ZOOM_CAPTURE_STEPS &&
+            (measure_steps_used%ZOOM_SAVE_EVERY)==0) {
+            fprintf(f_zoom,"%.12g %.12g %.12g\n",t_actual,x,p/M);
+        }
 
         if (x>0.0) pasos_derecha++;
         else if (x<0.0) pasos_izquierda++;
@@ -411,10 +474,10 @@ int main(void) {
                        estancias_izq,estancias_der,relerr_izq,relerr_der,
                        counts_ok,occ_ok,tau_ok);
 
-                if (counts_ok && occ_ok && tau_ok) {
-                    stats_converged=1;
-                    break;
-                }
+                /* Recalcular el indicador en CADA chequeo. En modo
+                 * MEASURE_FORCE_MAX la calidad final puede empeorar. */
+                stats_converged=(counts_ok && occ_ok && tau_ok);
+                if (stats_converged && !MEASURE_FORCE_MAX) break;
             } else {
                 stats_converged=0;
                 break;
@@ -432,6 +495,7 @@ int main(void) {
 
     fclose(f_tiempos_der);
     fclose(f_tiempos_izq);
+    if (f_zoom) fclose(f_zoom);
 
     /************************************************/
     /************** RESULTADOS O2 *******************/
@@ -514,9 +578,9 @@ int main(void) {
                 "%.12g %.12g %.12g %.12g %.12g "
                 "%ld %ld %d %d %.12g %.12g %.12g "
                 "%.12g %.12g %ld %.12g %.12g %.12g %d\n",
-                paso_h,A,eta,xc,ocupacion_izquierda,ocupacion_derecha,
+                h_run,A_run,eta_run,xc,ocupacion_izquierda,ocupacion_derecha,
                 transiciones_confirmadas,estancias_izq,estancias_der,
-                tau_izq,tau_der,tau_global,k_sim,FEXT,
+                tau_izq,tau_der,tau_global,k_sim,F_run,
                 term_steps_used,measure_steps_used,term_converged,stats_converged,
                 last_dEk,last_dEp,last_dX2,
                 Pizq_teoria,last_occ_error_term,term_mix_transiciones,
@@ -532,11 +596,11 @@ int main(void) {
     /************************************************/
     printf("Guardando datos y creando histogramas en O%d...\n",flag_Objetivo);
 
-    guardaEnergiasArray(nombre_metodo,paso_h,eta,
+    guardaEnergiasArray(nombre_metodo,h_run,eta_run,
                         t_energia,ek_array,ep_array,idx_energia);
-    guardaTrayectoriaArray(nombre_metodo,paso_h,eta,
+    guardaTrayectoriaArray(nombre_metodo,h_run,eta_run,
                            t_medida,x_array,v_array,idx_medida);
-    creaHistogramasArray(nombre_metodo,paso_h,eta,
+    creaHistogramasArray(nombre_metodo,h_run,eta_run,
                          x_array,v_array,idx_medida);
 
     free(t_energia); free(ek_array); free(ep_array);
@@ -548,10 +612,10 @@ int main(void) {
     printf("=====================================\n");
     printf("Objetivo               : O%d\n",flag_Objetivo);
     printf("Metodo                 : %s\n",nombre_metodo);
-    printf("h                      : %g\n",paso_h);
-    printf("A                      : %g\n",A);
-    printf("eta                    : %g\n",eta);
-    printf("FEXT                   : %g\n",FEXT);
+    printf("h                      : %g\n",h_run);
+    printf("A                      : %g\n",A_run);
+    printf("eta                    : %g\n",eta_run);
+    printf("FEXT                   : %g\n",F_run);
     printf("XC analisis            : %g\n",xc);
     printf("Termalizacion usada    : %ld / %ld pasos\n",
            term_steps_used,(long)TERM_MAX_STEPS);
@@ -563,7 +627,10 @@ int main(void) {
     printf("Estadistica objetivo   : %s (errOcc=%.4g, relerrTau=(%.4g,%.4g))\n",
            stats_converged?"SI":"NO",occ_error_measure,relerr_tau_izq,relerr_tau_der);
     printf("Guardado cada          : %ld pasos\n",guardar_cada_local);
-    printf("Resolucion salida      : %g\n",guardar_cada_local*paso_h);
+    printf("Resolucion salida      : %g\n",(double)guardar_cada_local*paso_h);
+    printf("Zoom alta resolucion   : cada %ld pasos (dt=%g), hasta t=%g\n",
+           (long)ZOOM_SAVE_EVERY,ZOOM_SAVE_EVERY*h_run,
+           ZOOM_CAPTURE_STEPS*h_run);
     printf("=====================================\n");
 
     return 0;

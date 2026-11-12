@@ -1,0 +1,60 @@
+AUDITORIA DE HISTOGRAMAS O2
+============================
+
+1) HISTOGRAMA DE POSICION / VELOCIDAD
+
+El archivo Histogramas_... generado por el nucleo C contiene actualmente 100
+cajas para x y 100 para v. Para la etapa actual NO se cambia el nucleo C.
+
+Motivo:
+- El problema no es falta de muestras por caja. Las simulaciones largas guardan
+  una muestra de trayectoria de orden 10^5 puntos, por lo que 100 cajas dejan
+  estadistica abundante.
+- Para P(x), 100 cajas son razonables para comprobar la forma bimodal, la
+  normalizacion y el acuerdo global con Boltzmann.
+- Subir sin mas a 200-300 cajas da mas resolucion pero tambien una curva mas
+  ruidosa y no arregla un problema de termalizacion.
+
+Los nuevos .plt muestran en el titulo:
+  bins = numero real de filas del histograma
+  Delta x = anchura real de caja
+
+Criterio práctico:
+- Delta x <= 0.03-0.04: muy buena resolución para los A usados habitualmente.
+- Delta x ~ 0.05-0.06: todavía útil para A~0.5-1, pero puede ser algo gruesa
+  para A~2, donde los picos son más estrechos.
+- Si en los casos de A alto aparece sistemáticamente Delta x > 0.04 y queremos
+  medir con precisión la forma del pico, entonces sí merece la pena cambiar el
+  nucleo C de 100 a 150-200 cajas. Eso sería un cambio en funciones.c, no en
+  main.c.
+
+2) HISTOGRAMA DE TIEMPOS DE RESIDENCIA
+
+Aquí NO conviene usar 100 bins fijos. El número de residencias es mucho menor
+que el número de muestras de x(t). Con ~300-1000 residencias, 100 cajas dejarían
+muchas casi vacías.
+
+Los scripts revisados usan por separado en cada pozo:
+  N_bins = sqrt(N_residencias)
+con límites 8 <= N_bins <= 60.
+
+Esto produce típicamente ~15-35 cajas en el régimen estadístico normal y es más
+robusto para comprobar una distribución exponencial.
+
+3) NORMALIZACION
+
+P(x) y P(v) se representan como densidades y se comparan directamente con:
+  P(x) = Z^{-1} exp[-V(x)/(kBT)]
+  P(v) = sqrt(M/(2*pi*kBT)) exp[-M v^2/(2 kBT)]
+
+Los histogramas de residencia se normalizan como:
+  1 / (N * Delta t_bin)
+por lo que también son densidades y se pueden comparar con:
+  p(t) = exp(-t/tau)/tau.
+
+CONCLUSION
+----------
+No recomiendo cambiar todavía las 100 cajas del histograma de posición.
+Primero ejecutar los casos revisados y mirar el Delta x que ahora queda impreso
+en cada figura. Para los histogramas de residencia, el binning adaptativo sí es
+una mejora necesaria y ya está implementado.

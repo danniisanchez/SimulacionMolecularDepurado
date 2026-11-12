@@ -1,13 +1,33 @@
 reset
 archivo="../../results/O2/analisis/trayectoria.dat"
-max_lineas=30000
-set terminal pngcairo size 1400,800 enhanced font "Arial,12"
-set output "../../plots/O2/Trayectorias/Trayectoria_fase_referencia.png"
-set multiplot title "O2 - Trayectoria y espacio de fases (caso de referencia)"
-set origin 0.0,0.5; set size 0.5,0.45; set title "x(t)"; set xlabel "t"; set ylabel "x"; set grid; set size noratio
-plot archivo every ::0::max_lineas u 1:2 w l lw 1 title "x(t)"
-set origin 0.0,0.05; set size 0.5,0.45; set title "v(t)"; set xlabel "t"; set ylabel "v"; set grid
-plot archivo every ::0::max_lineas u 1:3 w l lw 1 title "v(t)"
-set origin 0.5,0.05; set size 0.5,0.90; set size square; set title "Espacio de fases"; set xlabel "x"; set ylabel "v"; unset key; set grid
-plot archivo every ::0::max_lineas u 2:3 w p pt 7 ps 0.25
-unset multiplot; unset output
+
+stats archivo using 1 name "T" nooutput
+stride=int(T_records/50000.0)+1
+if(stride<1) stride=1
+
+set border linewidth 1.3
+set tics out
+set grid back
+
+set terminal pngcairo size 1500,700 enhanced font "Arial,14"
+set output "../../plots/O2/Trayectorias/Referencia_x_completa.png"
+set title "O2 - Posicion completa (caso de referencia)"
+set xlabel "t"; set ylabel "x(t)"
+set xrange [T_min:T_max]
+plot archivo every stride u 1:2 w l lw 1 title "x(t)"
+unset output
+
+set output "../../plots/O2/Trayectorias/Referencia_v_completa.png"
+set title "O2 - Velocidad completa (caso de referencia)"
+set xlabel "t"; set ylabel "v(t)"
+set xrange [T_min:T_max]
+plot archivo every stride u 1:3 w l lw 1 title "v(t)"
+unset output
+
+set terminal pngcairo size 900,850 enhanced font "Arial,14"
+set output "../../plots/O2/Trayectorias/Referencia_fase.png"
+set title "O2 - Espacio de fases (caso de referencia)"
+set xlabel "x"; set ylabel "v"
+set size square
+plot archivo every stride u 2:3 w p pt 7 ps 0.22 notitle
+unset output
