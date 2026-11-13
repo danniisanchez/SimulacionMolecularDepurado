@@ -24,6 +24,7 @@ set border linewidth 1.3
 set tics out
 set grid back
 set logscale x
+set xrange [0.009:55]
 set xlabel "F"
 set ylabel "<R_{ee,parallel}>"
 set title sprintf("O3 - KE=100 vs KE=1000 con el mismo barrido de F; N=%d",N)

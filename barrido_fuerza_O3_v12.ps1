@@ -11,7 +11,7 @@ $NsPermitidos=@(4,8,16,32,64)
 $KEvals=@(100.0,1000.0)
 
 # IMPORTANTE: exactamente el mismo barrido para KE=100 y KE=1000.
-$forces=@(0.0,0.03,0.1,0.3,0.5,1.0,2.0,3.0,5.0,10.0,20.0,50.0,100.0,200.0)
+$forces=@(0.0,0.03,0.1,0.3,0.5,1.0,2.0,3.0,5.0,10.0,20.0,50.0)
 
 $headPath="srcO3\head.h"
 $exe="o3_force_v12.exe"

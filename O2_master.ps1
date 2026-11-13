@@ -38,8 +38,8 @@ $ErrorActionPreference = "Stop"
 
 # Ruta absoluta a Gnuplot
 $gnuplotExe = "C:\Program Files\gnuplot\bin\gnuplot.exe"
-$scriptDirO2 = "scriptsGnuplot\O2"
 $projectRoot = $PSScriptRoot
+$scriptDirO2 = Join-Path $projectRoot "scriptsGnuplot\O2"
 
 $headPath = "src\head.h"
 $exe = "O2_master.exe"
@@ -512,8 +512,15 @@ function Run-TermalizacionScan {
 }
 
 function GPPath([string]$p) {
-    # Gnuplot en Windows acepta mejor rutas absolutas con "/".
-    return ([System.IO.Path]::GetFullPath($p)).Replace('\','/')
+    # Windows PowerShell 5.1: GetFullPath(ruta_relativa) puede usar el
+    # directorio de trabajo de .NET, diferente del pwd de PowerShell.
+    # Anclar TODAS las rutas relativas a la raiz real del proyecto.
+    if ([System.IO.Path]::IsPathRooted($p)) {
+        $rutaAbs = $p
+    } else {
+        $rutaAbs = Join-Path $projectRoot $p
+    }
+    return ([System.IO.Path]::GetFullPath($rutaAbs)).Replace('\','/')
 }
 
 function Plot-Case([double]$Aval,[double]$Etaval,[double]$Fval) {
@@ -656,7 +663,9 @@ function Run-Gnuplots([switch]$EtaOnly) {
     $ref="results\O2\analisis"
     $root="results\O2"
     $allEta=@(0.5,1.0,2.0) | ForEach-Object { "${root}\resumen_eta_A$(FName $_).dat" }
-    $singleEta="${root}\resumen_eta_A$(FName $AetaFixed).dat"
+    # -SoloGraficas sin -AetaFixed usa A=0.5; nunca buscar A0.dat.
+    $aPlot=if($AetaFixed -gt 0.0) {$AetaFixed} else {0.5}
+    $singleEta="${root}\resumen_eta_A$(FName $aPlot).dat"
     $cases=@(
       @{name='O2_01_distribucion_tiempos.plt'; deps=@("$ref\tiempos_derecha.dat","$ref\tiempos_izquierda.dat")},
       @{name='O2_02_tau_vs_A.plt'; deps=@("$root\resumen_A.dat")},
@@ -674,8 +683,8 @@ function Run-Gnuplots([switch]$EtaOnly) {
       @{name='O2_D03_trayectoria_fase.plt'; deps=@("$ref\trayectoria.dat")},
       @{name='O2_D04_trayectoria_zoom.plt'; deps=@("$ref\trayectoria_zoom.dat")}
     )
-    $aPlot=if($AetaFixed -gt 0.0) {$AetaFixed} else {0.5}
     Write-Host "Generando graficas disponibles; A de eta=$aPlot; datos no convergidos se distinguen."
+    $plotFailures=@()
     Push-Location $scriptDirO2
     try {
         foreach($item in $cases) {
@@ -683,7 +692,11 @@ function Run-Gnuplots([switch]$EtaOnly) {
             if($EtaOnly -and $name -notin @('O2_03_tau_vs_eta_tres_A.plt','O2_05_ocupaciones_eta_tres_A.plt')) {
                 continue
             }
-            if(!(Test-Path $name)) { throw "Falta grafica requerida por el master: $name" }
+            if(!(Test-Path $name)) {
+                Write-Warning "Falta script Gnuplot $name. Se continua con el resto."
+                $plotFailures += $name
+                continue
+            }
             $missing=@($item.deps | Where-Object { !(Test-Path (Join-Path $projectRoot $_)) })
             if($missing.Count -gt 0) {
                 Write-Host "[OMITIDA sin datos] $name : $($missing -join ', ')"
@@ -697,9 +710,16 @@ function Run-Gnuplots([switch]$EtaOnly) {
             }
             Write-Host "[GNUPLOT] $name"
             & $gnuplotExe -e "AETA=$(CFloat $aPlot); AFORCE=$(CFloat $A_force); ETAFORCE=$(CFloat $eta_force)" $name
-            if($LASTEXITCODE -ne 0) { throw "Gnuplot fallo: $name (salida $LASTEXITCODE)" }
+            if($LASTEXITCODE -ne 0) {
+                Write-Warning "Gnuplot fallo: $name (salida $LASTEXITCODE). Se continua con el resto."
+                $plotFailures += $name
+                continue
+            }
         }
     } finally { Pop-Location }
+    if($plotFailures.Count -gt 0) {
+        Write-Warning "Graficas fallidas: $($plotFailures -join ', '). Los datos de simulacion NO se han modificado."
+    }
 }
 
 function Read-DoubleOrDefault([string]$prompt,[double]$default) {

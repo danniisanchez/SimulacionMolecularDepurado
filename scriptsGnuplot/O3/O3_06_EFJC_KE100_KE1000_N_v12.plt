@@ -32,6 +32,7 @@ set tics out
 set grid back
 set key top left
 
+set xrange [0:50]
 set xlabel "F"
 set ylabel "<R_{ee,parallel}>"
 set title sprintf("Rango completo: K_{eff}=%.4g (KE=100), %.4g (KE=1000)",K100,K1000)
@@ -43,8 +44,8 @@ plot f100 u 1:($7==1 ? $2 : 1/0) w p pt 7 ps 1.3 title "Sim. KE=100", \
 
 set xlabel "F"
 set ylabel "<R_{ee,parallel}> / [(N-1)b]"
-set xrange [0:200]
-set title "La diferencia aparece por extensibilidad, no por desplazar el barrido"
+set xrange [0:5]
+set title "Zoom de bajas fuerzas: misma malla F, distinta extensibilidad"
 plot f100 u 1:($7==1 ? $2/L0 : 1/0) w p pt 7 ps 1.3 title "KE=100", \
      f1000 u 1:($7==1 ? $2/L0 : 1/0) w p pt 5 ps 1.3 title "KE=1000", \
      EFJC100(x)/L0 w l lw 2 title "EFJC KE=100", \

@@ -29,6 +29,7 @@ set tics out
 set grid back
 set key top left
 
+set xrange [0:50]
 set xlabel "F"; set ylabel "<R_{ee,parallel}>"
 set title "Rango completo: FJC ideal frente a FJC extensible"
 plot archivo u 1:($7==1 ? $2 : 1/0) w p pt 7 ps 1.35 title "Simulacion convergida", \

@@ -14,6 +14,7 @@ set border linewidth 1.3
 set tics out
 set grid back
 set logscale x
+set xrange [0.009:55]
 set xlabel "F"
 set ylabel "<R_{ee,parallel}>"
 set title sprintf("O3 - Fuerza-extension en escala logaritmica, N=%d",N)
