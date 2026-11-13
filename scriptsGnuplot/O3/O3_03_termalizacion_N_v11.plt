@@ -31,6 +31,9 @@ set border 15 lw 1.6 lc rgb "#334155"
 set tics out nomirror
 set grid xtics ytics back lc rgb "#CDD6E1" lw 1 dt 3
 set format x "%.3g"
+if (N == 32 || N == 64) {
+    set xrange [0:2000]
+}
 set lmargin at screen 0.11
 set rmargin at screen 0.72
 set bmargin at screen 0.15

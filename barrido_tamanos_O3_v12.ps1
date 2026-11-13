@@ -64,8 +64,10 @@ function Graficar {
             if($LASTEXITCODE -ne 0){ throw "Fallo Gnuplot: $s" }
         }
         foreach($N in $Ns){
-            & $gnuplot -e "N=$N" "O3_03_termalizacion_N_v11.plt"
-            if($LASTEXITCODE -ne 0){ throw "Fallo termalizacion N=$N" }
+            & $gnuplot -e "N=$N" "O3_03_termalizacion_normalizada.plt"
+            if($LASTEXITCODE -ne 0){ throw "Fallo termalizacion normalizada N=$N" }
+            & $gnuplot -e "N=$N" "O3_03_termalizacion_sin_normalizar.plt"
+            if($LASTEXITCODE -ne 0){ throw "Fallo termalizacion sin normalizar N=$N" }
             & $gnuplot -e "N=$N" "O3_04_polimero3D_N_v11.plt"
             if($LASTEXITCODE -ne 0){ throw "Fallo snapshot N=$N" }
         }

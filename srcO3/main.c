@@ -9,7 +9,13 @@ static double cambio_relativo(double a,double b,double escala_min) {
     return fabs(a-b)/escala;
 }
 
-/* Guia Rouse: el minimo de termalizacion crece aproximadamente como N^2. */
+/* Factor de reduccion del tiempo minimo SOLO para N > 16.
+ * 1.0 = sin reduccion; 0.5 = mitad del minimo original.
+ * No modifica TERM_MAX_STEPS ni los criterios de convergencia.
+ */
+#define FACTOR_REDUCCION_TERM_N_MAYOR_16 0.5
+
+/* Guia Rouse: el minimo base crece aproximadamente como N^2. */
 static long term_min_para_N(int N) {
     double q=(double)N/8.0;
     double factor=q*q;

@@ -1,3 +1,7 @@
+
+# O3_AUTO_TERMALIZACIONES_AMBAS_v1
+& (Join-Path $PSScriptRoot "O3_generar_ambas_termalizaciones.ps1")
+# FIN_O3_AUTO_TERMALIZACIONES_AMBAS_v1
 $gp="C:\Program Files\gnuplot\bin\gnuplot.exe"
 $Ns=@(4,8,16,32,64)
 if(!(Test-Path $gp)){throw "No se encuentra Gnuplot."}
