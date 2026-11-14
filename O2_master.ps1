@@ -50,7 +50,7 @@ $XC = 0.2
 
 # Barridos v8: mas extremos + mas puntos intermedios.
 # A: desde barrera muy baja (0.25) hasta barrera rara (2.2).
-$Avals = @(0.25,0.35,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.8,2.0,2.2)
+$Avals = @(1.0)
 
 # eta revisado para estudiar tau(eta) en ejes lineales.
 # Incluye el rango literal del enunciado [0.01,5] y la zona de baja friccion.
@@ -77,12 +77,12 @@ $Fvals = @(-0.50,-0.45,-0.40,-0.35,-0.30,-0.25,-0.20,-0.15,-0.10,-0.05,
            0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50)
 
 $eta_ASweep = 1.0
-$A_force = 0.5
+$A_force = 1.0
 $eta_force = 1.0
 
 # Caso canonico para energia, histograma, trayectoria y distribucion de estancias.
 # Caso de referencia mantenido como antes: A=0.5, eta=1, F=0.
-$Aref = 0.5
+$Aref = 1.0
 $Etaref = 1.0
 $Fref = 0.0
 
@@ -745,7 +745,7 @@ function Read-DoubleOrDefault([string]$prompt,[double]$default) {
 #   referencia: A=0.5, eta=1, F=0
 if((-not $SoloGraficas) -and (-not $SoloTermalizacion)) {
     if($AetaFixed -le 0.0) {
-        $AetaFixed=Read-DoubleOrDefault "A fijo para el barrido de eta" 0.5
+        $AetaFixed=Read-DoubleOrDefault "A fijo para el barrido de eta" 1.0
     }
     if($AetaFixed -le 0.0) { throw "A debe ser positivo." }
 
