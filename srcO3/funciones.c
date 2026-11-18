@@ -27,10 +27,10 @@ void paso_verlet_gjf(Bead *beads,int N,Vec3 *f_old,Vec3 *f_new,Vec3 *beta) {
     const double b=1.0/denom;
     const double sigma=sqrt(2.0*alpha*KBT*H);
 
-    beta[0].x=beta[0].y=beta[0].z=0.0;
+   
     calcula_fuerzas(beads,f_old,N);
 
-    for (int i=1;i<N;i++) {
+    for (int i=0;i<N;i++) {
         beta[i].x=sigma*random_gaussiano();
         beta[i].y=sigma*random_gaussiano();
         beta[i].z=sigma*random_gaussiano();
@@ -42,7 +42,7 @@ void paso_verlet_gjf(Bead *beads,int N,Vec3 *f_old,Vec3 *f_new,Vec3 *beta) {
 
     calcula_fuerzas(beads,f_new,N);
 
-    for (int i=1;i<N;i++) {
+    for (int i=0;i<N;i++) {
         beads[i].v.x=a*beads[i].v.x+H*(a*f_old[i].x+f_new[i].x)/(2.0*M)+b*beta[i].x/M;
         beads[i].v.y=a*beads[i].v.y+H*(a*f_old[i].y+f_new[i].y)/(2.0*M)+b*beta[i].y/M;
         beads[i].v.z=a*beads[i].v.z+H*(a*f_old[i].z+f_new[i].z)/(2.0*M)+b*beta[i].z/M;
@@ -303,7 +303,7 @@ double cos_angulo_medio(const Bead *beads,int N) {
 double energia_cinetica(const Bead *beads,int N) {
     double ek=0.0;
 
-    for (int i=1;i<N;i++) {
+    for (int i=0;i<N;i++) {
         double v2=beads[i].v.x*beads[i].v.x+
                   beads[i].v.y*beads[i].v.y+
                   beads[i].v.z*beads[i].v.z;

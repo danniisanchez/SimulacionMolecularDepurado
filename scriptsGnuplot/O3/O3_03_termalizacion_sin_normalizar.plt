@@ -1,5 +1,5 @@
 # O3 - Energias acumuladas en unidades originales de la simulacion.
-# Referencia: main.c (col 2 = <Ek>, col 3 = <Ebond>), head.h (KBT = 1).
+# Referencia: termalizacion_N*.dat (col 2 = <Ek>, col 3 = <Ebond>). Verificar KBT en head.h.
 # Ejecutar desde scriptsGnuplot/O3: gnuplot -e "N=32" O3_03_termalizacion_sin_normalizar.plt
 # XMAX=0 muestra el rango temporal completo. Por defecto, zoom [0:2000] para N=32,64.
 reset
@@ -12,8 +12,8 @@ if (!exists("TERM_FILE")) TERM_FILE=sprintf("../../results/O3/N%d/termalizacion_
 if (!exists("TERM_OUT")) TERM_OUT=sprintf("../../plots/O3/N%d/Termalizacion_N%d_sin_normalizar.png",N,N)
 
 # Valores absolutos almacenados en el .dat (sin dividir por N ni por k_B*T).
-# Las referencias utilizan el numero N-1 de monomeros moviles/enlaces.
-EkRef=1.5*(N-1)*KBT
+# Referencias para cadena libre: N monomeros moviles y N-1 enlaces.
+EkRef=1.5*N*KBT
 EbondRef=0.5*(N-1)*KBT
 
 set terminal pngcairo size 1880,970 enhanced font "Arial,17"

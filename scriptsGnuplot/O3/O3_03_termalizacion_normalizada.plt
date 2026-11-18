@@ -1,5 +1,5 @@
-# O3 - Energias acumuladas normalizadas con el MISMO denominador.
-# Referencia: main.c (col 2 = <Ek>, col 3 = <Ebond>), head.h (KBT = 1).
+# O3 - Cadena libre sin fuerza: energias acumuladas normalizadas con el MISMO denominador.
+# Referencia: termalizacion_N*.dat (col 2 = <Ek>, col 3 = <Ebond>). Verificar KBT en head.h.
 # Ejecutar desde scriptsGnuplot/O3: gnuplot -e "N=32" O3_03_termalizacion_normalizada.plt
 # XMAX=0 muestra el rango temporal completo. Por defecto, zoom [0:2000] para N=32,64.
 reset
@@ -11,16 +11,17 @@ if (!exists("XMAX")) XMAX=(N == 32 || N == 64 ? 2000.0 : 0.0)
 if (!exists("TERM_FILE")) TERM_FILE=sprintf("../../results/O3/N%d/termalizacion_N%d.dat",N,N)
 if (!exists("TERM_OUT")) TERM_OUT=sprintf("../../plots/O3/N%d/Termalizacion_N%d_normalizada.png",N,N)
 
-# Se divide AMBAS energias por (N-1)*k_B*T.
-# La primera particula esta fija: N-1 monomeros moviles y N-1 enlaces.
-Escale=(N-1)*KBT
+# Se divide AMBAS energias por N*k_B*T (por monomero).
+# Cadena libre sin anclaje: N monomeros moviles y N-1 enlaces.
+Escale=N*KBT
+EbondRef=0.5*(N-1.0)/N
 if (N <= 1 || KBT <= 0) print "ERROR: N>1 y KBT>0 requeridos"
 
 set terminal pngcairo size 1880,970 enhanced font "Arial,17"
 set output TERM_OUT
-set title sprintf("O3 - Termalizacion: energias por monomero movil, N=%d",N) font ",21"
+set title sprintf("O3 - Termalizacion: energias por monomero (sin anclaje), N=%d",N) font ",21"
 set xlabel "Tiempo de simulacion, t" font ",19"
-set ylabel "Energia acumulada / [(N-1)k_{B}T]" font ",19"
+set ylabel "Energia acumulada / [Nk_{B}T]" font ",19"
 set border 15 lw 1.6 lc rgb "#334155"
 set tics out nomirror
 set grid xtics ytics back lc rgb "#CDD6E1" lw 1 dt 3
@@ -37,11 +38,11 @@ set key box lw 1.2 lc rgb "#334155"
 set key opaque
 set key spacing 1.7 samplen 2.4 font ",15"
 plot TERM_FILE every PLOT_SKIP using 1:($2/Escale) \
-       with lines lw 2.5 lc rgb "#1675A9" title "<E_{k}>/[(N-1)k_{B}T]", \
+       with lines lw 2.5 lc rgb "#1675A9" title "<E_{k}>/[Nk_{B}T]", \
      TERM_FILE every PLOT_SKIP using 1:($3/Escale) \
-       with lines lw 2.5 lc rgb "#CE6A27" title "<E_{bond}>/[(N-1)k_{B}T]", \
+       with lines lw 2.5 lc rgb "#CE6A27" title "<E_{bond}>/[Nk_{B}T]", \
      1.5 with lines dt 2 lw 1.8 lc rgb "#1675A9" title "Teoria E_{k}: 3/2", \
-     0.5 with lines dt 2 lw 1.8 lc rgb "#CE6A27" title "Aprox. E_{bond}: 1/2"
+     EbondRef with lines dt 2 lw 1.8 lc rgb "#CE6A27" title sprintf("Aprox. E_{bond}: (N-1)/(2N) = %.4g",EbondRef)
 unset output
 print sprintf("Guardado: %s",TERM_OUT)
 print "Son medias acumuladas. El equilibrio estructural requiere diagnosticos adicionales."

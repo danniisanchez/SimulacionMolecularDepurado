@@ -51,7 +51,7 @@
 #define O3_V11_TUTOR_REVIEW 1
 #define O3_V12_KE_COMPARISON 1
 
-#define F_ext 0.10000000000000001
+#define F_ext 0.0
 
 /* 0 = sin bending, 1 = armonico, 2 = WLC */
 #define BENDING_MODEL 0

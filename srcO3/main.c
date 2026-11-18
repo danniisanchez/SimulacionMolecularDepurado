@@ -96,7 +96,7 @@ int main(int argc,char **argv) {
     fprintf(f_term,"# t <Ek> <Ebond> <Ebend> <Eev> Ek_teo <Ree> <Rg> <bond>\n");
     fprintf(f_med,"# t Ek Ebond Ebend Eev Ree Rg bond Ree_parallel theta_mean cos_theta_mean dmin_nonbonded\n");
 
-    const double ek_teo=1.5*(N-1)*KBT;
+    const double ek_teo=1.5*(N)*KBT;
     const long term_min=term_min_para_N(N);
 
     printf("O3: N=%d, WCA=%d, eps=%g, sigma=%g, bending=%d, Kbend=%g, F=%g\n",
