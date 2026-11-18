@@ -122,20 +122,20 @@ function Ensure-Dirs {
 function Get-Limits([double]$Aval,[double]$Etaval,[double]$Fval) {
     # Configuracion larga actualmente usada.
     [long]$termMax = 300000000
-    [long]$measMax = 1000000000
+    [long]$measMax = 2000000000
     $clase = "normal"
 
     if(($Aval -ge 1.4) -or ($Etaval -le 0.03) -or ($Etaval -ge 5.0)) {
-        $termMax = 600000000
-        $measMax = 1000000000
+        $termMax = 300000000
+        $measMax = 2000000000
         $clase = "dificil"
     }
 
     # Para los barridos manuales eta esta rama NO se usa: se impone
     # el mismo presupuesto a A=0.5, 1 y 2.
     if(($Aval -ge 1.8) -or ($Etaval -le 0.01) -or ($Etaval -ge 10.0)) {
-        $termMax = 600000000
-        $measMax = 1000000000
+        $termMax = 300000000
+        $measMax = 2000000000
         $clase = "extremo"
     }
 

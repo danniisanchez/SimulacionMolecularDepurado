@@ -6,14 +6,14 @@
 #define K 1.0
 
 /* Parametros O2 modificados automaticamente por PowerShell */
-#define A 0.7
+#define A 2.0
 #define FEXT 0.0
 #define KBT 0.2
 
 #define PI (2.0*asin(1.0))
 
 #define paso_h 0.001
-#define eta 1.0
+#define eta 0.029999999999999999
 #define flag 2
 #define flag_Objetivo 2
 
@@ -109,6 +109,8 @@ extern void creaHistogramasArray(char *nombre_metodo,double h_val,double eta_val
                                  double *x,double *v,long n);
 
 #endif
+
+
 
 
 
