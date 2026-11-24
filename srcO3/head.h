@@ -7,7 +7,7 @@
 
 #define M 1.0
 #define KBT 1.0
-#define KE 1000.0
+#define KE 100.0
 #define B0 1.0
 #define ETA 1.0
 #define H 0.001
