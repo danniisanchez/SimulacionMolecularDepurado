@@ -1,0 +1,5 @@
+modo=tamanos_libre
+F_ext=0
+anclaje=ninguno
+referencia_Ek=1.5*N*KBT
+origen=srcO3_tamanos_libre

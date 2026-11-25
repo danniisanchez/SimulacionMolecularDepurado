@@ -1,7 +1,5 @@
-Modelo de ajuste: R_rms = C (N-B)^nu; n=N-1 enlaces
-Rg libre:  C=0.347683298709  nu=0.548821168784  B=-0.812217844924
-Rg B=1:    C=0.439773498709  nu=0.493785351454
-Ree libre: C=0.814056568708  nu=0.559155595603  B=-0.157313142764
-Ree B=1:   C=0.953576247078  nu=0.522057088998
-FJC teorica: Ree_rms=b sqrt(N-1), Rg_rms=b sqrt[(N^2-1)/(6N)]
-Aviso: con solo 5 tamanos, C/nu/B pueden estar fuertemente correlacionados.
+Ajuste con nu=1/2 FIJO: R_rms=C sqrt(N-B); N=4..64 (11 N previstos)
+Rg:  C=0.427326052568, B=0.528175511857, nu=0.5
+Ree: C=1.04521088069, B=1.33525098239, nu=0.5
+FJC: Ree_rms=b sqrt(N-1), Rg_rms=b sqrt[(N^2-1)/(6N)]
+Nota: resultados heredados deben ser de la MISMA fisica (F=0 y sin anclaje).

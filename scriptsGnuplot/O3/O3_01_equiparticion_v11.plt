@@ -1,17 +1,23 @@
+# O3 equiparticion - cadena libre; nueva referencia cinetica = 3 NkBT/2.
 reset
 archivo="../../results/O3/resumen_tamanos.dat"
 salida="../../plots/O3/Equiparticion_vs_N.png"
-set terminal pngcairo size 1500,900 enhanced font "Arial,14"
+set terminal pngcairo size 2000,1080 enhanced font "Arial,21"
+set border 15 lw 1.7 lc rgb "#303B47"
+set tics out nomirror font ",20"
+set grid xtics ytics back lc rgb "#D4DDE5" lw 1 dt 3
+set xlabel "Numero de monomeros, N" font ",27"
+set lmargin at screen 0.13
+set rmargin at screen 0.745
+set bmargin at screen 0.15
+set tmargin at screen 0.89
+set key outside right top vertical box opaque spacing 1.65 samplen 2.5 font ",18"
+
 set output salida
-set border linewidth 1.3
-set tics out
-set grid back
-set title "O3 - Equiparticion para todos los tamanos"
-set xlabel "Numero de beads, N"
-set ylabel "Energia medida / referencia"
-set yrange [0.8:1.2]
-set key top right
-plot 1.0 w l lw 2 dt 2 title "Referencia", \
-     archivo u 1:($2/$3) w p pt 7 ps 1.4 title "<E_k> / [3(N-1)k_BT/2]", \
-     archivo u 1:($4/$5) w p pt 5 ps 1.4 title "<E_{bond}> / [(N-1)k_BT/2]"
+set title "O3 - Equiparticion y termalizacion frente a N" font ",27"
+set ylabel "Energia media / referencia" font ",26"
+set yrange [0.75:1.25]
+plot 1.0 with lines lw 2.1 dt 2 lc rgb "#303B47" title "Equiparticion = 1", \
+ archivo using 1:($2/$3) with points pt 7 ps 2.3 lc rgb "#0072B2" title "Cinetica: E_k / (3Nk_{B}T/2)", \
+ archivo using 1:($4/$5) with points pt 5 ps 2.5 lc rgb "#D55E00" title "Enlace: E_{bond} / [(N-1)k_{B}T/2]"
 unset output

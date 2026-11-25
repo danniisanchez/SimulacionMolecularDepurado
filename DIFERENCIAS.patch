@@ -1,0 +1,312 @@
+\n######## main.c original frente a modo libre ########\n--- original
++++ modificado
+@@ -1,7 +1,8 @@
+ #include "head.h"
+ 
+ static int N_permitido(int N) {
+-    return N==4 || N==8 || N==16 || N==32 || N==64;
++    return N==4 || N==6 || N==8 || N==12 || N==16 || N==24 ||
++           N==32 || N==40 || N==48 || N==56 || N==64;
+ }
+ 
+ static double cambio_relativo(double a,double b,double escala_min) {
+@@ -37,7 +38,7 @@
+ 
+ int main(int argc,char **argv) {
+     if (argc!=2) {
+-        printf("Uso: %s N\nValores previstos: 4, 8, 16, 32, 64\n",argv[0]);
++        printf("Uso: %s N\nValores previstos: 4, 6, 8, 12, 16, 24, 32, 40, 48, 56, 64\n",argv[0]);
+         return 1;
+     }
+ 
+@@ -90,7 +91,7 @@
+     fprintf(f_term,"# t <Ek> <Ebond> <Ebend> <Eev> Ek_teo <Ree> <Rg> <bond>\n");
+     fprintf(f_med,"# t Ek Ebond Ebend Eev Ree Rg bond Ree_parallel theta_mean cos_theta_mean dmin_nonbonded\n");
+ 
+-    const double ek_teo=1.5*(N-1)*KBT;
++    const double ek_teo=1.5*N*KBT;  /* cadena libre: N monomeros moviles */
+     const long term_min=term_min_para_N(N);
+ 
+     printf("O3: N=%d, WCA=%d, eps=%g, sigma=%g, bending=%d, Kbend=%g, F=%g\n",
+\n######## head.h original frente a modo libre ########\n--- original
++++ modificado
+@@ -51,7 +51,7 @@
+ #define O3_V11_TUTOR_REVIEW 1
+ #define O3_V12_KE_COMPARISON 1
+ 
+-#define F_ext 0.10000000000000001
++#define F_ext 0.0 /* Barrido N: cadena LIBRE, sin traccion */
+ 
+ /* 0 = sin bending, 1 = armonico, 2 = WLC */
+ #define BENDING_MODEL 0
+\n######## funciones.c original frente a modo libre ########\n--- original
++++ modificado
+@@ -27,10 +27,10 @@
+     const double b=1.0/denom;
+     const double sigma=sqrt(2.0*alpha*KBT*H);
+ 
+-    beta[0].x=beta[0].y=beta[0].z=0.0;
++   
+     calcula_fuerzas(beads,f_old,N);
+ 
+-    for (int i=1;i<N;i++) {
++    for (int i=0;i<N;i++) {
+         beta[i].x=sigma*random_gaussiano();
+         beta[i].y=sigma*random_gaussiano();
+         beta[i].z=sigma*random_gaussiano();
+@@ -42,7 +42,7 @@
+ 
+     calcula_fuerzas(beads,f_new,N);
+ 
+-    for (int i=1;i<N;i++) {
++    for (int i=0;i<N;i++) {
+         beads[i].v.x=a*beads[i].v.x+H*(a*f_old[i].x+f_new[i].x)/(2.0*M)+b*beta[i].x/M;
+         beads[i].v.y=a*beads[i].v.y+H*(a*f_old[i].y+f_new[i].y)/(2.0*M)+b*beta[i].y/M;
+         beads[i].v.z=a*beads[i].v.z+H*(a*f_old[i].z+f_new[i].z)/(2.0*M)+b*beta[i].z/M;
+@@ -303,7 +303,7 @@
+ double energia_cinetica(const Bead *beads,int N) {
+     double ek=0.0;
+ 
+-    for (int i=1;i<N;i++) {
++    for (int i=0;i<N;i++) {
+         double v2=beads[i].v.x*beads[i].v.x+
+                   beads[i].v.y*beads[i].v.y+
+                   beads[i].v.z*beads[i].v.z;
+\n######## barrido_tamanos_O3_v12.ps1 frente a modificado ########\n--- original
++++ modificado
+@@ -1,112 +1,143 @@
+ param(
+     [switch]$SoloReconstruir,
+     [switch]$SoloGraficas,
+-    [switch]$ReusarExistentes
++    [switch]$ReusarExistentes,
++    [switch]$SoloNuevos
+ )
+ 
+-$ErrorActionPreference = "Stop"
+-$Ns = @(4,8,16,32,64)
+-$exe = "o3_v11.exe"
+-$gnuplot = "C:\Program Files\gnuplot\bin\gnuplot.exe"
++$ErrorActionPreference = 'Stop'
++$root = $PSScriptRoot
++$Ns = @(4,6,8,12,16,24,32,40,48,56,64)
++$Nuevos = @(6,12,24,40,48,56)
++$AProcesar = if ($SoloNuevos) { $Nuevos } else { $Ns }
++$exe = Join-Path $root 'o3_tamanos_libre.exe'
++$src = Join-Path $root 'srcO3_tamanos_libre'
++$gnuplot = 'C:\Program Files\gnuplot\bin\gnuplot.exe'
++if (-not (Test-Path -LiteralPath $gnuplot)) {
++    $comando = Get-Command 'gnuplot.exe' -ErrorAction SilentlyContinue
++    if (-not $comando) { $comando = Get-Command 'gnuplot' -ErrorAction SilentlyContinue }
++    if ($comando) { $gnuplot = $comando.Source }
++}
+ 
+ function Last-DataLine([string]$file) {
+-    return Get-Content $file |
+-        Where-Object { $_ -notmatch '^\s*#' -and $_.Trim() -ne "" } |
++    return Get-Content -LiteralPath $file |
++        Where-Object { $_ -notmatch '^\s*#' -and $_.Trim() -ne '' } |
+         Select-Object -Last 1
+ }
+-
+ function Resumen-Convergido([string]$file) {
+-    if(!(Test-Path $file)){ return $false }
+-    $line=Last-DataLine $file
+-    if(!$line){ return $false }
+-    $c=($line.Trim() -split '\s+') | Where-Object {$_ -ne ""}
+-    # v11/adaptativo: col 25=term_converged, 26=stats_converged
+-    if($c.Count -lt 26){ return $false }
+-    return (($c[24] -eq "1") -and ($c[25] -eq "1"))
++    if (-not (Test-Path -LiteralPath $file)) { return $false }
++    $line = Last-DataLine $file
++    if (-not $line) { return $false }
++    $c = ($line.Trim() -split '\s+') | Where-Object { $_ -ne '' }
++    if ($c.Count -lt 26) { return $false }
++    return (($c[24] -eq '1') -and ($c[25] -eq '1'))
++}
++function Reconstruir {
++    $out = Join-Path $root 'results\O3\resumen_tamanos.dat'
++    $folder = Split-Path -Parent $out
++    New-Item -ItemType Directory -Force -Path $folder | Out-Null
++    $rows = @()
++    $header = $null
++    foreach ($n in $Ns) {
++        $f = Join-Path $root ("results\O3\N{0}\resumen_N{0}.dat" -f $n)
++        if (-not (Test-Path -LiteralPath $f)) {
++            throw "Falta el resumen del tamano N=$n. Para usar los 11 puntos, ejecuta primero ese caso."
++        }
++        $data = Last-DataLine $f
++        if (-not $data) { throw "No hay datos en $f" }
++        $cols = @($data.Trim() -split '\s+')
++        if ([int]$cols[0] -ne $n) { throw "N no coincide en $f" }
++        $rows += $data.Trim()
++        if (-not $header) {
++            $header = Get-Content -LiteralPath $f | Where-Object { $_ -match '^\s*#' } | Select-Object -First 1
++        }
++    }
++    if (-not $header) { throw 'Los resumenes individuales no tienen cabecera.' }
++    # ASCII evita el BOM UTF8 que a veces interfiere con Gnuplot.
++    [System.IO.File]::WriteAllLines($out, ([string[]](@($header) + $rows)), [System.Text.Encoding]::ASCII)
++    Write-Host "[O3] Resumen reconstruido con $($Ns.Count) puntos: $out"
++    Write-Warning 'Comprueba que los 5 tamanos historicos correspondan a F=0 y sin anclaje, antes de interpretar el ajuste.'
++}
++function Graficar {
++    if (-not (Test-Path -LiteralPath $gnuplot)) { throw "Gnuplot no encontrado: $gnuplot" }
++    foreach ($n in $Ns) {
++        New-Item -ItemType Directory -Force -Path (Join-Path $root ("plots\O3\N{0}" -f $n)) | Out-Null
++    }
++    $cwd = Get-Location
++    try {
++        Set-Location -LiteralPath (Join-Path $root 'scriptsGnuplot\O3')
++        foreach ($s in @('O3_01_equiparticion_v11.plt','O3_02_Ree_Rg_vs_N_v11.plt','O3_05_ley_escala_NmenosB_v11.plt')) {
++            & $gnuplot $s
++            if ($LASTEXITCODE -ne 0) { throw "Fallo de Gnuplot en $s" }
++        }
++        foreach ($n in $Ns) {
++            $term = Join-Path $root ("results\O3\N{0}\termalizacion_N{0}.dat" -f $n)
++            if (Test-Path -LiteralPath $term) {
++                foreach ($s in @('O3_03_termalizacion_normalizada.plt','O3_03_termalizacion_sin_normalizar.plt')) {
++                    & $gnuplot -e "N=$n" $s
++                    if ($LASTEXITCODE -ne 0) { throw "Fallo de Gnuplot en $s, N=$n" }
++                }
++            } else {
++                Write-Warning "N=${n}: sin archivo de termalizacion. Se omite este caso."
++            }
++            $snap = Join-Path $root ("results\O3\N{0}\snapshot_final_N{0}.dat" -f $n)
++            if (Test-Path -LiteralPath $snap) {
++                & $gnuplot -e "N=$n" 'O3_04_polimero3D_N_v11.plt'
++                if ($LASTEXITCODE -ne 0) { throw "Fallo al generar snapshot N=$n" }
++            }
++        }
++    } finally {
++        Set-Location -LiteralPath $cwd.Path
++    }
++}
++function Backup-Case([int]$n) {
++    $case = Join-Path $root ("results\O3\N{0}" -f $n)
++    if (-not (Test-Path -LiteralPath $case)) { return }
++    $names = @("resumen_N${n}.dat", "termalizacion_N${n}.dat", "medidas_N${n}.dat", "snapshot_final_N${n}.dat",'procedencia_tamanos_libre.txt')
++    $presentes = @($names | Where-Object { Test-Path -LiteralPath (Join-Path $case $_) })
++    if ($presentes.Count -eq 0) { return }
++    $stamp = Get-Date -Format 'yyyyMMdd_HHmmssfff'
++    $dir = Join-Path $root ("results\O3\copias_previas\N{0}_{1}" -f $n,$stamp)
++    New-Item -ItemType Directory -Force -Path $dir | Out-Null
++    foreach ($name in $presentes) { Copy-Item -LiteralPath (Join-Path $case $name) -Destination $dir }
++    Write-Host "[COPIA] Caso anterior N=$n guardado en $dir"
+ }
+ 
+-function Reconstruir {
+-    New-Item -ItemType Directory -Force -Path "results\O3" | Out-Null
+-    $out="results\O3\resumen_tamanos.dat"
+-    $headerWritten=$false
+-    foreach($N in $Ns){
+-        $f="results\O3\N$N\resumen_N$N.dat"
+-        if(!(Test-Path $f)){ throw "Falta $f" }
+-        $lines=Get-Content $f
+-        $header=$lines | Where-Object {$_ -match '^\s*#'} | Select-Object -First 1
+-        $data=Last-DataLine $f
+-        if(!$data){ throw "Sin datos en $f" }
+-        if(!$headerWritten){
+-            if($header){ Set-Content $out $header -Encoding UTF8 }
+-            else { Set-Content $out "# N Ek_mean Ek_teo Ebond_mean Ebond_ref Ree_mean Ree2_mean Rg_mean Rg2_mean bond_mean muestras" -Encoding UTF8 }
+-            $headerWritten=$true
+-        }
+-        Add-Content $out $data.Trim() -Encoding UTF8
+-    }
+-    Write-Host "[OK] $out reconstruido para N=$($Ns -join ',')"
++if ($SoloReconstruir) { Reconstruir; if (-not $SoloGraficas) { Graficar }; exit 0 }
++if ($SoloGraficas) { Graficar; exit 0 }
++
++foreach ($name in @('main.c','funciones.c','head.h')) {
++    if (-not (Test-Path -LiteralPath (Join-Path $src $name))) { throw "Falta el codigo del modo libre: $name" }
+ }
+-
+-function Graficar {
+-    if(!(Test-Path $gnuplot)){ throw "No se encuentra Gnuplot en $gnuplot" }
+-    New-Item -ItemType Directory -Force -Path "plots\O3" | Out-Null
+-    foreach($N in $Ns){ New-Item -ItemType Directory -Force -Path "plots\O3\N$N" | Out-Null }
+-
+-    $cwd=Get-Location
+-    try{
+-        Set-Location "scriptsGnuplot\O3"
+-        $scripts=@(
+-            "O3_01_equiparticion_v11.plt",
+-            "O3_02_Ree_Rg_vs_N_v11.plt",
+-            "O3_05_ley_escala_NmenosB_v11.plt"
+-        )
+-        foreach($s in $scripts){
+-            & $gnuplot $s
+-            if($LASTEXITCODE -ne 0){ throw "Fallo Gnuplot: $s" }
+-        }
+-        foreach($N in $Ns){
+-            & $gnuplot -e "N=$N" "O3_03_termalizacion_normalizada.plt"
+-            if($LASTEXITCODE -ne 0){ throw "Fallo termalizacion normalizada N=$N" }
+-            & $gnuplot -e "N=$N" "O3_03_termalizacion_sin_normalizar.plt"
+-            if($LASTEXITCODE -ne 0){ throw "Fallo termalizacion sin normalizar N=$N" }
+-            & $gnuplot -e "N=$N" "O3_04_polimero3D_N_v11.plt"
+-            if($LASTEXITCODE -ne 0){ throw "Fallo snapshot N=$N" }
+-        }
+-    } finally {
+-        Set-Location $cwd
+-    }
++if (-not (Test-Path -LiteralPath (Join-Path $root 'srcO3\random.c'))) {
++    throw 'Falta srcO3\random.c, necesario para compilar.'
+ }
+-
+-if($SoloReconstruir){
+-    Reconstruir
+-    if(!$SoloGraficas){ Graficar }
+-    exit 0
+-}
+-if($SoloGraficas){
+-    Graficar
+-    exit 0
+-}
+-
+-try{
+-    gcc srcO3\main.c srcO3\funciones.c srcO3\random.c -O2 -std=c11 -Wall -Wextra -pedantic -lm -o $exe
+-    if($LASTEXITCODE -ne 0){ throw "Error compilando O3." }
+-
+-    foreach($N in $Ns){
+-        $res="results\O3\N$N\resumen_N$N.dat"
+-        if($ReusarExistentes -and (Resumen-Convergido $res)){
+-            Write-Host "[REUSO] N=$N ya converge."
++try {
++    Push-Location $root
++    & gcc (Join-Path $src 'main.c') (Join-Path $src 'funciones.c') (Join-Path $root 'srcO3\random.c') -I $src -O2 -std=c11 -Wall -Wextra -pedantic -lm -o $exe
++    if ($LASTEXITCODE -ne 0) { throw 'Error compilando O3 libre.' }
++    foreach ($n in $AProcesar) {
++        $res = Join-Path $root ("results\O3\N{0}\resumen_N{0}.dat" -f $n)
++        $meta = Join-Path $root ("results\O3\N{0}\procedencia_tamanos_libre.txt" -f $n)
++        if ($ReusarExistentes -and (Resumen-Convergido $res)) {
++            if (-not (Test-Path -LiteralPath $meta)) {
++                Write-Warning "N=${n}: resultado anterior sin procedencia de F=0/sin anclaje; NO lo consideres validado como cadena libre sin comprobarlo."
++            }
++            Write-Host "[REUSO] N=$n (convergencia TERM y STATS declarada)"
+             continue
+         }
+-        Write-Host ""
+-        Write-Host "================================================"
+-        Write-Host "O3 v11: N=$N"
+-        Write-Host "================================================"
+-        & ".\$exe" $N | Out-Host
+-        if($LASTEXITCODE -ne 0){ throw "Fallo O3 N=$N" }
++        Backup-Case $n
++        Write-Host "[O3 LIBRE] N=$n; F=0; sin anclaje; referencia Ek=1.5*N*KBT"
++        & $exe $n | Out-Host
++        if ($LASTEXITCODE -ne 0) { throw "Fallo O3 sin fuerza N=$n" }
++        $dir = Split-Path -Parent $meta
++        New-Item -ItemType Directory -Force -Path $dir | Out-Null
++        @('modo=tamanos_libre','F_ext=0','anclaje=ninguno','referencia_Ek=1.5*N*KBT','origen=srcO3_tamanos_libre') |
++            Set-Content -LiteralPath $meta -Encoding ASCII
+     }
+-
+     Reconstruir
+     Graficar
++} finally {
++    if (Test-Path -LiteralPath $exe) { Remove-Item -LiteralPath $exe -Force }
++    Pop-Location
+ }
+-finally{
+-    if(Test-Path $exe){ Remove-Item $exe -Force }
+-}

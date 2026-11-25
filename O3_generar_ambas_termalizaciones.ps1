@@ -1,7 +1,7 @@
-# Se invoca desde graficar_O3_todo_v12.ps1. No simula ni compila nada.
+﻿# Se invoca desde graficar_O3_todo_v12.ps1. No simula ni compila nada.
 # Solo genera las dos versiones de termalizacion con datos existentes.
 param(
-    [int[]]$Ns = @(4,8,16,32,64)
+    [int[]]$Ns = @(4,6,8,12,16,24,32,40,48,56,64)
 )
 
 $ErrorActionPreference = 'Stop'
